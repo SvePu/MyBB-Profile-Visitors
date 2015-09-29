@@ -1,6 +1,11 @@
 <?php
+/*
+	Main plugin file for Profile Visitors plugin for MyBB 1.8
+	Copyright © 2015 Svepu
+	Last change: 2015-09-29 - v 1.0
+	Licensed under the GNU GPL, version 3.0
+*/
 
-// Disallow direct access to this file for security reasons
 if(!defined("IN_MYBB"))
 {
 	die("Direct initialization of this file is not allowed.<br /><br />Please make sure IN_MYBB is defined.");
