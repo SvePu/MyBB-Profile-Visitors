@@ -2,8 +2,8 @@
 /*
 	Main plugin file for Profile Visitors plugin for MyBB 1.8
 	Copyright © 2015 Svepu
-	Last change: 2015-09-29 - v 1.0
-	Licensed under the GNU GPL, version 3.0
+	Last change: 2015-10-04 - v 1.1
+	Licensed under the GNU GPL, version 3
 */
 
 if(!defined("IN_MYBB"))
@@ -29,7 +29,7 @@ function profilevisitors_info()
 			'website'     	=>	'https://github.com/SvePu/Profile-Visitors',
 			'author'      	=>	'SvePu',
 			'authorsite'  	=>	'https://github.com/SvePu',
-			'version'     	=>	'1.0',
+			'version'     	=>	'1.1',
 			'compatibility'	=>	'18*',
 			'codename'		=>	'profilevisitors',
 			'guid'		   	=>	''
@@ -241,22 +241,19 @@ function profilevisitors_run(){
 
 		if ($db->num_rows($query) > 0 && $mybb->settings['profilevisitors_groupselect'] != "-1")
 		{
-			while($row = $db->fetch_array($query))
+			while($data = $db->fetch_array($query))
 			{
-				$u = $row['vid'];
-				$un = get_user($u);
-
-				if($un!="")
+				if(!empty(get_user($data['vid'])))
 				{
-					$date = my_date($mybb->settings['dateformat'], $row['time']);
-					$time = my_date($mybb->settings['timeformat'], $row['time']);
+					$date = my_date($mybb->settings['dateformat'], $data['time']);
+					$time = my_date($mybb->settings['timeformat'], $data['time']);
 					if ($mybb->settings['profilevisitors_styled_usernames'] == 1)
 					{
-						$username = build_profile_link(format_name(htmlspecialchars_uni($row['username']), $row['usergroup'], $row['displaygroup']), $row['uid']);
+						$username = build_profile_link(format_name(htmlspecialchars_uni($data['username']), $data['usergroup'], $data['displaygroup']), $data['uid']);
 					}
 					else
 					{
-						$username = build_profile_link(htmlspecialchars_uni($row['username']), $row['uid']);
+						$username = build_profile_link(htmlspecialchars_uni($data['username']), $data['uid']);
 					}				
 					$profilevisitors = $profilevisitors."<span title='(".$date." - ".$time.")'>".$username."</span>, ";
 				}
