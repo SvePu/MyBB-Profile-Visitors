@@ -7,8 +7,19 @@ Installation:
 * Install & Activate the plugin in ACP
 * Check the "Profile Visitors Settings" in configuration
 
+Simple Update:
+* Download & unzip new package
+* Copy content from "Upload" folder to the forum root on server - overwrite existing plugin files
+
+Full Update:
+* Download & unzip new package
+* Uninstall plugin in ACP
+* Copy content from "Upload" folder to the forum root on server - overwrite existing plugin files
+* Install & activate the plugn in ACP
+* Check the plugin settings in configuration
+
 This plugin offers full language support.
 The basic package contains english and german language files.
 
 
-Licensed under the GNU GPL, version 3.
+Licensed under the GNU GPL, version 3
