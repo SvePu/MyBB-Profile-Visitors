@@ -2,7 +2,7 @@
 /*
 	Main plugin file for Profile Visitors plugin for MyBB 1.8
 	Copyright © 2015 Svepu
-	Last change: 2015-10-05 - v 1.2
+	Last change: 2015-10-05 - v 1.3
 	Licensed under the GNU GPL, version 3
 */
 
@@ -29,7 +29,7 @@ function profilevisitors_info()
 			'website'     	=>	'https://github.com/SvePu/Profile-Visitors',
 			'author'      	=>	'SvePu',
 			'authorsite'  	=>	'https://github.com/SvePu',
-			'version'     	=>	'1.2',
+			'version'     	=>	'1.3',
 			'compatibility'	=>	'18*',
 			'codename'		=>	'profilevisitors',
 			'guid'		   	=>	''
@@ -242,7 +242,7 @@ function profilevisitors_run(){
 		
 		if (!empty($mybb->settings['profilevisitors_groupselect']))
 		{
-			$pvhidden = ' AND u.usergroup NOT IN ("'.$mybb->settings['profilevisitors_groupselect'].'")';
+			$pvhidden = ' AND u.usergroup NOT IN ('.$mybb->settings['profilevisitors_groupselect'].')';
 		}
 		else
 		{
@@ -260,7 +260,9 @@ function profilevisitors_run(){
 		{
 			while($data = $db->fetch_array($query))
 			{
-				if(!empty(get_user($data['vid'])))
+				$vis_id = $data['vid'];
+				$visitor = get_user($vis_id);
+				if(!empty($visitor))
 				{
 					$date = my_date($mybb->settings['dateformat'], $data['time']);
 					$time = my_date($mybb->settings['timeformat'], $data['time']);
