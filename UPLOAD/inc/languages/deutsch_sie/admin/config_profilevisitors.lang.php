@@ -3,11 +3,13 @@
 	Language admin file for Profile Visitors plugin for MyBB 1.8
 	Language: deutsch_sie
 	Copyright © 2015 Svepu
-	Last change: 2015-09-28
+	Last change: 2015-10-05
 */
 
 $l['plugin_name'] = 'Profil Besucher';
 $l['plugin_desc'] = 'Mit diesem Plugin werden Besucher eines Mitglieder-Profils aufgelistet.';
+$l['profilevisitors_delinfo'] = 'Wenn Sie bei der Deinstallation des Plugins auch dessen Datenbankeinträge löschen möchten, müssen Sie, vor der Deinstallation, die Datei <strong>.pvdb_unlock.no</strong> im Forenroot in <strong>.pvdb_unlock.yes</strong> umbenennen.';
+$l['profilevisitors_delinfo_warning'] = 'Die Datei <strong>.pvdb_unlock.yes</strong> wurde gefunden - die Datenbankeinträge des Plugins werden bei der Deinstallation ebenfalls entfernt!';
 
 $l['profilevisitors_settings_title'] = 'Profil Besucher Einstellungen';
 $l['profilevisitors_settings_title_desc'] = 'Einstellungen für das Profil Besucher Plugin';

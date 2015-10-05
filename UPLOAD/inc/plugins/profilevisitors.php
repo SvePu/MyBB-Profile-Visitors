@@ -2,7 +2,7 @@
 /*
 	Main plugin file for Profile Visitors plugin for MyBB 1.8
 	Copyright © 2015 Svepu
-	Last change: 2015-10-04 - v 1.1
+	Last change: 2015-10-05 - v 1.2
 	Licensed under the GNU GPL, version 3
 */
 
@@ -29,7 +29,7 @@ function profilevisitors_info()
 			'website'     	=>	'https://github.com/SvePu/Profile-Visitors',
 			'author'      	=>	'SvePu',
 			'authorsite'  	=>	'https://github.com/SvePu',
-			'version'     	=>	'1.1',
+			'version'     	=>	'1.2',
 			'compatibility'	=>	'18*',
 			'codename'		=>	'profilevisitors',
 			'guid'		   	=>	''
@@ -53,9 +53,22 @@ function profilevisitors_info()
 </form>';
 	}
 	
+	if(file_exists(MYBB_ROOT.".pvdb_unlock.no"))
+	{
+		$info_delinfo = "<span style=\"line-height: 2.5em;\">".$db->escape_string($lang->profilevisitors_delinfo)."</span>";
+	}
+	else if (file_exists(MYBB_ROOT.".pvdb_unlock.yes"))
+	{
+		$info_delinfo = "<span style=\"line-height: 2.5em; color:red;\">".$db->escape_string($lang->profilevisitors_delinfo_warning)."</span>";
+	}
+	else
+	{
+		$info_delinfo = "";
+	}
+	
 	if($info_desc != '')
 	{
-		$info['description'] = $info_desc.'<br />'.$info['description'];
+		$info['description'] = $info_desc.'<br />'.$info['description'].'<br />'.$info_delinfo;
 	}
     
     return $info;
@@ -178,9 +191,13 @@ function profilevisitors_deactivate()
 
 function profilevisitors_uninstall()
 {
-	global $db;
+	global $mybb, $db;
 
-	//$db->write_query("DROP TABLE `".TABLE_PREFIX."profilevisitors`");
+	if(file_exists(MYBB_ROOT.".pvdb_unlock.yes"))
+	{
+		$db->write_query("DROP TABLE `".TABLE_PREFIX."profilevisitors`");
+		rename(MYBB_ROOT.".pvdb_unlock.yes", MYBB_ROOT.".pvdb_unlock.no");
+	}
 	$db->delete_query("templates","title IN('userprofile_profilevisitors')");
 	
 	$result = $db->simple_select('settinggroups', 'gid', "name = 'profilevisitors_settings'", array('limit' => 1));
