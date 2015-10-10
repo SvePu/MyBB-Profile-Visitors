@@ -2,7 +2,7 @@
 /*
 	Main plugin file for Profile Visitors plugin for MyBB 1.8
 	Copyright © 2015 Svepu
-	Last change: 2015-10-05 - v 1.3
+	Last change: 2015-10-05 - v 1.4
 	Licensed under the GNU GPL, version 3
 */
 
@@ -29,7 +29,7 @@ function profilevisitors_info()
 			'website'     	=>	'https://github.com/SvePu/Profile-Visitors',
 			'author'      	=>	'SvePu',
 			'authorsite'  	=>	'https://github.com/SvePu',
-			'version'     	=>	'1.3',
+			'version'     	=>	'1.4',
 			'compatibility'	=>	'18*',
 			'codename'		=>	'profilevisitors',
 			'guid'		   	=>	''
@@ -222,6 +222,7 @@ function profilevisitors_run(){
 		$vuid = (int)$mybb->user['uid'];
 		$time = time();
 		$limit = !empty($mybb->settings['profilevisitors_limit']) && $mybb->settings['profilevisitors_limit'] > 0 ? $mybb->settings['profilevisitors_limit'] : 10;
+		$profilevisitors = $comma = '';
 		
 		$lang->load("profilevisitors");
 		$profilevisitors_header = $db->escape_string($lang->profilevisitors_header);
@@ -273,8 +274,9 @@ function profilevisitors_run(){
 					else
 					{
 						$username = build_profile_link(htmlspecialchars_uni($data['username']), $data['uid']);
-					}				
-					$profilevisitors = $profilevisitors."<span title='(".$date." - ".$time.")'>".$username."</span>, ";
+					}
+					$profilevisitors .= $comma."<span title='(".$date." - ".$time.")'>".$username."</span>";
+					$comma = ", ";
 				}
 			}
 			
