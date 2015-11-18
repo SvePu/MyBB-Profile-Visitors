@@ -8,8 +8,8 @@
 
 $l['plugin_name'] = 'Profil Besucher';
 $l['plugin_desc'] = 'Mit diesem Plugin werden Besucher eines Mitglieder-Profils aufgelistet.';
-$l['profilevisitors_delinfo'] = 'Wenn Du bei der Deinstallation des Plugins auch dessen Datenbankeinträge löschen möchtest, musst du, vor der Deinstallation, die Datei <strong>.pvdb_unlock.no</strong> im Forenroot in <strong>.pvdb_unlock.yes</strong> umbenennen.';
-$l['profilevisitors_delinfo_warning'] = 'Die Datei <strong>.pvdb_unlock.yes</strong> wurde gefunden - die Datenbankeinträge des Plugins werden bei der Deinstallation ebenfalls entfernt!';
+$l['profilevisitors_uninstall'] = 'Profil Besucher - Deinstallation';
+$l['profilevisitors_uninstall_message'] = 'Sollen auch alle Plugineinträge aus der Datenbank gelöscht werden?';
 
 $l['profilevisitors_settings_title'] = 'Profil Besucher Einstellungen';
 $l['profilevisitors_settings_title_desc'] = 'Einstellungen für das Profil Besucher Plugin';

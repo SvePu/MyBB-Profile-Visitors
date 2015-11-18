@@ -8,8 +8,8 @@
 
 $l['plugin_name'] = 'Profile Visitors';
 $l['plugin_desc'] = 'Add a Box in Users Profiles with Users Have Visit It';
-$l['profilevisitors_delinfo'] = 'If you want to remove data base entries of the plugin by deinstallation, you must rename <strong>.pvdb_unlock.no</strong> in root folder to <strong>.pvdb_unlock.yes</strong> first.';
-$l['profilevisitors_delinfo_warning'] = 'File <strong>.pvdb_unlock.yes</strong> was found - data base entries of plugin also will delete by deinstallation!';
+$l['profilevisitors_uninstall'] = 'Profile Visitors - Uninstallation';
+$l['profilevisitors_uninstall_message'] = 'Do you wish to drop all plugin entries from the database?';
 
 $l['profilevisitors_settings_title'] = 'Profil Visitors Settings';
 $l['profilevisitors_settings_title_desc'] = 'Setting of the Profil Visitors plugin';

@@ -53,22 +53,10 @@ function profilevisitors_info()
 </form>';
 	}
 	
-	if(file_exists(MYBB_ROOT.".pvdb_unlock.no"))
-	{
-		$info_delinfo = "<span style=\"line-height: 2.5em;\">".$db->escape_string($lang->profilevisitors_delinfo)."</span>";
-	}
-	else if (file_exists(MYBB_ROOT.".pvdb_unlock.yes"))
-	{
-		$info_delinfo = "<span style=\"line-height: 2.5em; color:red;\">".$db->escape_string($lang->profilevisitors_delinfo_warning)."</span>";
-	}
-	else
-	{
-		$info_delinfo = "";
-	}
 	
 	if($info_desc != '')
 	{
-		$info['description'] = $info_desc.'<br />'.$info['description'].'<br />'.$info_delinfo;
+		$info['description'] = $info_desc.'<br />'.$info['description'];
 	}
     
     return $info;
@@ -88,6 +76,12 @@ function profilevisitors_is_installed()
 function profilevisitors_install()
 {
 	global $db, $mybb, $lang;
+	
+	//delete old unnecessary unlock file
+	if(file_exists(MYBB_ROOT.".pvdb_unlock.no"))
+	{
+		unlink(MYBB_ROOT.".pvdb_unlock.no");
+	}
 	
 	$lang->load("config_profilevisitors");
 	
@@ -191,13 +185,15 @@ function profilevisitors_deactivate()
 
 function profilevisitors_uninstall()
 {
-	global $mybb, $db;
-
-	if(file_exists(MYBB_ROOT.".pvdb_unlock.yes"))
+	global $db, $mybb;
+	
+	if($mybb->request_method != 'post')
 	{
-		$db->write_query("DROP TABLE `".TABLE_PREFIX."profilevisitors`");
-		rename(MYBB_ROOT.".pvdb_unlock.yes", MYBB_ROOT.".pvdb_unlock.no");
+		global $page, $lang;
+		$lang->load('config_profilevisitors');
+		$page->output_confirm_action('index.php?module=config-plugins&action=deactivate&uninstall=1&plugin=profilevisitors', $lang->profilevisitors_uninstall_message, $lang->profilevisitors_uninstall);
 	}
+	
 	$db->delete_query("templates","title IN('userprofile_profilevisitors')");
 	
 	$result = $db->simple_select('settinggroups', 'gid', "name = 'profilevisitors_settings'", array('limit' => 1));
@@ -208,6 +204,11 @@ function profilevisitors_uninstall()
 		$db->delete_query('settinggroups', "gid='{$pv_group['gid']}'");
 		$db->delete_query('settings', "gid='{$pv_group['gid']}'");
 		rebuild_settings();
+	}
+	
+	if(!isset($mybb->input['no']) && $db->table_exists('profilevisitors'))
+	{
+		$db->drop_table('profilevisitors');
 	}
 	
 }
