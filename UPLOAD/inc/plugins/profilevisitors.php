@@ -1,7 +1,7 @@
 <?php
 /*
 	Main plugin file for Profile Visitors plugin for MyBB 1.8
-	Copyright © 2015 Svepu
+	Copyright Â© 2015 Svepu
 	Last change: 2015-10-05 - v 1.4
 	Licensed under the GNU GPL, version 3
 */
@@ -80,7 +80,7 @@ function profilevisitors_install()
 	//delete old unnecessary unlock file
 	if(file_exists(MYBB_ROOT.".pvdb_unlock.no"))
 	{
-		unlink(MYBB_ROOT.".pvdb_unlock.no");
+		@unlink(MYBB_ROOT.".pvdb_unlock.no");
 	}
 	
 	$lang->load("config_profilevisitors");
