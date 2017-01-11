@@ -2,7 +2,7 @@
 /*
 	Language file for Profile Visitors plugin for MyBB 1.8
 	Language: deutsch_sie
-	Copyright © 2015 Svepu
+	Copyright Â© 2015 Svepu
 	Last change: 2015-09-28 
 */
 
