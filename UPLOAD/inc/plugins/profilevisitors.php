@@ -3,7 +3,7 @@
 /**
  *  Main plugin file for Profile Visitors plugin for MyBB 1.8
  *  Copyright © 2015 Svepu
- *  Last change: 2022-11-12 - v 2.0
+ *  Last change: 2022-11-15 - v 2.0
  *  Licensed under the GNU GPL, version 3
  */
 
@@ -60,7 +60,7 @@ function profilevisitors_info()
         $info_desc .= "<span style=\"font-size: 0.9em;\">(~<a href=\"index.php?module=config-settings&action=change&gid=" . $settings_group['gid'] . "\"> " . $db->escape_string($lang->setting_group_profilevisitors) . " </a>~)</span>";
     }
 
-    if (is_array($plugins_cache) && is_array($plugins_cache['active']) && $plugins_cache['active']['profilevisitors'])
+    if (is_array($plugins_cache) && is_array($plugins_cache['active']) && array_key_exists('profilevisitors', $plugins_cache['active']))
     {
         $info_desc .= '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" style="float: right;" target="_blank" />
 <input type="hidden" name="cmd" value="_s-xclick" />
