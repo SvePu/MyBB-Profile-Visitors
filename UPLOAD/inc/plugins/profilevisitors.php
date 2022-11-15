@@ -1,7 +1,7 @@
 <?php
 
 /**
- *  Main plugin file for Profile Visitors plugin for MyBB 1.8
+ *  Main plugin file for Profile Visitors Plugin for MyBB 1.8
  *  Copyright © 2015 Svepu
  *  Last change: 2022-11-15 - v 2.0
  *  Licensed under the GNU GPL, version 3
