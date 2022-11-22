@@ -284,7 +284,6 @@ function profilevisitors_deleted_user($users)
 
 function profilevisitors_run()
 {
-
     global $mybb;
 
     if ($mybb->settings['profilevisitors_enable'] != 1)
