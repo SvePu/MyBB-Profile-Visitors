@@ -30,6 +30,7 @@ if (defined('THIS_SCRIPT'))
 if (defined('IN_ADMINCP'))
 {
     $plugins->add_hook('admin_config_settings_begin', 'profilevisitors_settings');
+    $plugins->add_hook('datahandler_user_delete_start', 'profilevisitors_deleted_user');
 }
 else
 {
@@ -266,6 +267,19 @@ function profilevisitors_cleanup()
     }
 
     $db->delete_query("templates", "title IN('userprofile_profilevisitors')");
+}
+
+function profilevisitors_deleted_user($users)
+{
+    global $db;
+
+    foreach ($users->delete_uids as $key => $uid)
+    {
+        if ($db->table_exists('profilevisitors'))
+        {
+            $db->delete_query("profilevisitors", "uid={$uid} OR vid={$uid}");
+        }
+    }
 }
 
 function profilevisitors_run()
