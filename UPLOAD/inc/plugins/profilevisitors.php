@@ -23,7 +23,7 @@ if (defined('THIS_SCRIPT'))
 
     if (THIS_SCRIPT == 'member.php')
     {
-        $templatelist .= 'member_profile_visitors';
+        $templatelist .= 'member_profile_visitors, member_profile_visitors_visitor, member_profile_visitors_header_info, member_profile_visitors_header_all';
     }
 }
 
@@ -87,6 +87,7 @@ function profilevisitors_install()
 
     profilevisitors_cleanup();
 
+    // Add DB Tables
     $collation = $db->build_create_table_collation();
 
     if (!$db->table_exists('profilevisitors'))
@@ -122,24 +123,37 @@ function profilevisitors_install()
         }
     }
 
-    $template = array(
-        'title' => 'member_profile_visitors',
-        'template' => $db->escape_string('<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
+    // Add Templates
+    $templates = array(
+        'member_profile_visitors' => '<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
     <tr>
-        <td class="thead"><strong>{$profilevisitors_header}</strong><span class="smalltext">{$profilevisitors_header_info}</span>{$allprofilevisitors}</td>
+        <td class="thead"><strong>{$profilevisitors_header}</strong>{$profilevisitors_header_info}{$profilevisitors_header_all}</td>
     </tr>
     <tr>
         <td class="trow1">{$profilevisitors}</td>
     </tr>
 </table>
-<br />'),
-        'version' => 2,
-        'sid' => -2,
-        'dateline' => TIME_NOW
+<br />',
+        'member_profile_visitors_visitor' => '{$comma}<span title="({$visitdate} - {$visittime})">{$visitor[\'profilelink\']}</span>',
+        'member_profile_visitors_header_info' => '<span class="smalltext">({$lang->profilevisitors_header_info})</span>',
+        'member_profile_visitors_header_all' => '<span class="smalltext" style="float:right;">{$lang->profilevisitors_header_all}</span>'
     );
 
-    $db->insert_query("templates", $template);
+    foreach ($templates as $name => $template)
+    {
+        $addtemplate = array(
+            'title' => $db->escape_string($name),
+            'template' => $db->escape_string($template),
+            'version' => 2,
+            'sid' => -2,
+            'dateline' => TIME_NOW
+        );
 
+        $db->insert_query('templates', $addtemplate);
+        unset($addtemplate);
+    }
+
+    // Add Settings
     $query = $db->simple_select('settinggroups', 'MAX(disporder) AS disporder');
     $disporder = (int)$db->fetch_field($query, 'disporder');
 
@@ -226,7 +240,7 @@ function profilevisitors_uninstall()
         $page->output_confirm_action('index.php?module=config-plugins&action=deactivate&uninstall=1&plugin=profilevisitors', $lang->profilevisitors_uninstall_message, $lang->profilevisitors_uninstall);
     }
 
-    $db->delete_query("templates", "title IN('member_profile_visitors')");
+    $db->delete_query("templates", "title IN('member_profile_visitors', 'member_profile_visitors_visitor', 'member_profile_visitors_header_info', 'member_profile_visitors_header_all')");
 
     $db->delete_query("settinggroups", "name='profilevisitors'");
     $db->delete_query("settings", "name LIKE 'profilevisitors_%'");
@@ -331,7 +345,7 @@ function profilevisitors_run()
 
 
         $profilevisitors_header = $db->escape_string($lang->profilevisitors_header);
-        $profilevisitors_header_info = $allprofilevisitors = '';
+        $profilevisitors_header_info = $profilevisitors_header_all = '';
         $profilevisitors = $db->escape_string($lang->profilevisitors_novisitors);
 
         if ($mybb->settings['profilevisitors_hidegroups'] != "-1")
@@ -361,38 +375,42 @@ function profilevisitors_run()
             if ($db->num_rows($query))
             {
                 $profilevisitors = $comma = '';
-                while ($data = $db->fetch_array($query))
+                while ($visitor = $db->fetch_array($query))
                 {
-                    $date = my_date($mybb->settings['dateformat'], $data['dateline']);
-                    $time = my_date($mybb->settings['timeformat'], $data['dateline']);
+                    $visitdate = my_date($mybb->settings['dateformat'], $visitor['dateline']);
+                    $visittime = my_date($mybb->settings['timeformat'], $visitor['dateline']);
 
                     if ($mybb->settings['profilevisitors_styled_usernames'] == 1)
                     {
-                        $username = build_profile_link(format_name(htmlspecialchars_uni($data['username']), $data['usergroup'], $data['displaygroup']), $data['vid']);
+                        $visitor['username'] = format_name(htmlspecialchars_uni($visitor['username']), $visitor['usergroup'], $visitor['displaygroup']);
                     }
                     else
                     {
-                        $username = build_profile_link(htmlspecialchars_uni($data['username']), $data['vid']);
+                        $visitor['username'] = htmlspecialchars_uni($visitor['username']);
                     }
 
-                    $profilevisitors .= $comma . "<span title='(" . $date . " - " . $time . ")'>" . $username . "</span>";
+                    $visitor['profilelink'] = build_profile_link($visitor['username'], $visitor['vid']);
+
+                    eval('$profilevisitors .= "' . $templates->get('member_profile_visitors_visitor', 1, 0) . '";');
                     $comma = ", ";
                 }
 
                 if ($mybb->settings['profilevisitors_limit'] > 0)
                 {
-                    $profilevisitors_header_info = ' (' . $lang->sprintf($db->escape_string($lang->profilevisitors_header_info), (int)$mybb->settings['profilevisitors_limit']) . ')';
+                    $lang->profilevisitors_header_info = $lang->sprintf($db->escape_string($lang->profilevisitors_header_info), (int)$mybb->settings['profilevisitors_limit']);
+                    eval('$profilevisitors_header_info = "' . $templates->get('member_profile_visitors_header_info') . '";');
                 }
 
                 if ($mybb->settings['profilevisitors_allvisits'] == 1)
                 {
                     $query = $db->simple_select("profilevisitors", "COUNT(*) AS allvisits", "uid = '{$myuid}'");
                     $allvisits = (int)$db->fetch_field($query, 'allvisits');
-                    $allprofilevisitors = '<span class="smalltext" style="float:right;">' . $lang->sprintf($db->escape_string($lang->profilevisitors_header_all), $allvisits) . '</span>';
+                    $lang->profilevisitors_header_all = $lang->sprintf($db->escape_string($lang->profilevisitors_header_all), $allvisits);
+                    eval('$profilevisitors_header_all = "' . $templates->get('member_profile_visitors_header_all') . '";');
                 }
             }
         }
 
-        eval("\$profilevisits = \"" . $templates->get("member_profile_visitors") . "\";");
+        eval('$profilevisits = "' . $templates->get('member_profile_visitors') . '";');
     }
 }
