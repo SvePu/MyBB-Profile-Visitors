@@ -28,5 +28,5 @@ $l['setting_profilevisitors_styled_usernames_desc'] = 'Choose YES to enable this
 $l['setting_profilevisitors_hidegroups'] = 'Hide user groups from list.';
 $l['setting_profilevisitors_hidegroups_desc'] = 'Select user groups which members are not to appear on the list.';
 
-$l['setting_profilevisitors_allvisits'] = 'Show counter of all vitits?';
+$l['setting_profilevisitors_allvisits'] = 'Show counter of all visits?';
 $l['setting_profilevisitors_allvisits_desc'] = 'Select YES to show a counter of all profile visits.';
