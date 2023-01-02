@@ -127,7 +127,7 @@ function profilevisitors_install()
     $templates = array(
         'member_profile_visitors' => '<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
     <tr>
-        <td class="thead"><strong>{$profilevisitors_header}</strong>{$profilevisitors_header_info}{$profilevisitors_header_all}</td>
+        <td class="thead"><strong>{$lang->profilevisitors_header}</strong>{$profilevisitors_header_info}{$profilevisitors_header_all}</td>
     </tr>
     <tr>
         <td class="trow1">{$profilevisitors}</td>
@@ -240,7 +240,7 @@ function profilevisitors_uninstall()
         $page->output_confirm_action('index.php?module=config-plugins&action=deactivate&uninstall=1&plugin=profilevisitors', $lang->profilevisitors_uninstall_message, $lang->profilevisitors_uninstall);
     }
 
-    $db->delete_query("templates", "title IN('member_profile_visitors', 'member_profile_visitors_visitor', 'member_profile_visitors_header_info', 'member_profile_visitors_header_all')");
+    $db->delete_query("templates", "title LIKE 'member_profile_visitor%'");
 
     $db->delete_query("settinggroups", "name='profilevisitors'");
     $db->delete_query("settings", "name LIKE 'profilevisitors_%'");
@@ -343,8 +343,7 @@ function profilevisitors_run()
         global $lang, $templates, $theme, $profilevisitors;
         $lang->load("profilevisitors");
 
-
-        $profilevisitors_header = $db->escape_string($lang->profilevisitors_header);
+        $lang->profilevisitors_header = $db->escape_string($lang->profilevisitors_header);
         $profilevisitors_header_info = $profilevisitors_header_all = '';
         $profilevisitors = $db->escape_string($lang->profilevisitors_novisitors);
 
