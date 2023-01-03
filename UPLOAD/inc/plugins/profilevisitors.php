@@ -516,7 +516,7 @@ function profilevisitors_misc()
 
     global $db, $headerinclude, $header, $theme, $templates, $footer;
 
-    $profile_visitors = '';
+    $profile_visitors = $profile_visitors_row = '';
 
     $where = "WHERE pv.uid = '{$uid}' AND u.uid != 0";
 
