@@ -503,12 +503,13 @@ function profilevisitors_misc()
     }
 
     $uid = $mybb->get_input('uid', MyBB::INPUT_INT);
-    if (!$uid)
+    if (empty($uid))
     {
         error($lang->profilevisitors_uid_missing);
     }
 
-    if ($uid && empty($user = get_user($uid)))
+    $user = get_user($uid);
+    if (empty($user) || !is_array($user))
     {
         error($lang->profilevisitors_not_exists);
     }
