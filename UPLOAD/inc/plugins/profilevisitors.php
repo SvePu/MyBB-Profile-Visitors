@@ -2,8 +2,8 @@
 
 /**
  *  Main plugin file for Profile Visitors Plugin for MyBB 1.8
- *  Copyright © 2015 Svepu
- *  Last change: 2022-11-15 - v 2.0
+ *  Copyright © 2015 SvePu
+ *  Last change: 2022-01-02 - v 2.0
  *  Licensed under the GNU GPL, version 3
  */
 
@@ -23,18 +23,26 @@ if (defined('THIS_SCRIPT'))
 
     if (THIS_SCRIPT == 'member.php')
     {
-        $templatelist .= 'member_profile_visitors, member_profile_visitors_visitor, member_profile_visitors_header_info, member_profile_visitors_header_all';
+        $templatelist .= 'member_profile_visitors, member_profile_visitors_visitor, member_profile_visitors_header_info, member_profile_visitors_header_all, member_profile_visitors_header_all_more';
+    }
+    elseif (THIS_SCRIPT == 'misc.php')
+    {
+        $templatelist .= 'misc_profile_visitors_row, misc_profile_visitors';
     }
 }
 
 if (defined('IN_ADMINCP'))
 {
     $plugins->add_hook('admin_config_settings_begin', 'profilevisitors_settings');
+    $plugins->add_hook("admin_settings_print_peekers", 'profilevisitors_settings_peekers');
     $plugins->add_hook('datahandler_user_delete_start', 'profilevisitors_deleted_user');
 }
 else
 {
-    $plugins->add_hook('member_profile_end', 'profilevisitors_run');
+    $plugins->add_hook('member_profile_end', 'profilevisitors_member_profile');
+    $plugins->add_hook('misc_start', 'profilevisitors_misc');
+    $plugins->add_hook('fetch_wol_activity_end', 'profilevisitors_wol');
+    $plugins->add_hook('build_friendly_wol_location_end', 'profilevisitors_build_wol');
 }
 
 function profilevisitors_info()
@@ -136,7 +144,38 @@ function profilevisitors_install()
 <br />',
         'member_profile_visitors_visitor' => '{$comma}<span title="({$visitdate} - {$visittime})">{$visitor[\'profilelink\']}</span>',
         'member_profile_visitors_header_info' => '<span class="smalltext">({$lang->profilevisitors_header_info})</span>',
-        'member_profile_visitors_header_all' => '<span class="smalltext" style="float:right;">{$lang->profilevisitors_header_all}</span>'
+        'member_profile_visitors_header_all' => '<span class="smalltext" style="float:right;">{$lang->profilevisitors_header_all}</span>',
+        'member_profile_visitors_header_all_more' => '<span class="smalltext" style="float:right;"><a href="misc.php?action=profile_visitors&amp;uid={$myuid}" title="{$lang->profilevisitors_header_all_more_title}">{$lang->profilevisitors_header_all}</a></span>',
+        'misc_profile_visitors' => '<html>
+    <head>
+        <title>{$mybb->settings[\'bbname\']} - {$lang->profilevisitors_visitors}</title>
+        {$headerinclude}
+    </head>
+    <body>
+        {$header}
+        <table width="100%" border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
+            <tr>
+                <td class="thead" colspan="3"><strong>{$lang->profilevisitors_visitors}</strong></td>
+            </tr>
+            <tr>
+                <td class="tcat" width="1%"><span class="smalltext"><strong>{$lang->profilevisitors_visitor_avatar}</strong></span></td>
+                <td class="tcat"><span class="smalltext"><strong>{$lang->profilevisitors_visitor_username}</strong></span></td>
+                <td class="tcat" width="30%" align="center"><span class="smalltext"><strong>{$lang->profilevisitors_visitor_visittime}</strong></span></td>
+            </tr>
+            {$profile_visitors_row}
+            <tr>
+                <td class="tfoot" colspan="3">&nbsp;</td>
+            </tr>
+        </table>
+        <div class="float_left">{$multipage}</div>
+        {$footer}
+    </body>
+</html>',
+        'misc_profile_visitors_row' => '<tr>
+    <td class="{$altbg}" align="center">{$visitor[\'avatar\']}</td>
+    <td class="{$altbg}">{$visitor[\'profilelink\']}</td>
+    <td class="{$altbg}"align="center">{$visitor[\'lastvisit\']}</td>
+</tr>'
     );
 
     foreach ($templates as $name => $template)
@@ -192,6 +231,14 @@ function profilevisitors_install()
         'allvisits' => array(
             'optionscode' => 'yesno',
             'value' => 1
+        ),
+        'overviewpage' => array(
+            'optionscode' => 'yesno',
+            'value' => 1
+        ),
+        'overviewpagegroups' => array(
+            'optionscode' => 'groupselect',
+            'value' => '2,3,4,6'
         )
     );
 
@@ -240,7 +287,7 @@ function profilevisitors_uninstall()
         $page->output_confirm_action('index.php?module=config-plugins&action=deactivate&uninstall=1&plugin=profilevisitors', $lang->profilevisitors_uninstall_message, $lang->profilevisitors_uninstall);
     }
 
-    $db->delete_query("templates", "title LIKE 'member_profile_visitor%'");
+    $db->delete_query("templates", "title LIKE 'member_profile_visitors%' OR title LIKE 'misc_profile_visitors%'");
 
     $db->delete_query("settinggroups", "name='profilevisitors'");
     $db->delete_query("settings", "name LIKE 'profilevisitors_%'");
@@ -271,6 +318,13 @@ function profilevisitors_settings()
     $lang->load('config_profilevisitors');
 }
 
+function profilevisitors_settings_peekers(&$peekers)
+{
+    $peekers[] = 'new Peeker($(".setting_profilevisitors_enable"), $("#row_setting_profilevisitors_showgroups, #row_setting_profilevisitors_limit, #row_setting_profilevisitors_hidegroups, #row_setting_profilevisitors_styled_usernames, #row_setting_profilevisitors_allvisits, #row_setting_profilevisitors_overviewpage, #row_setting_profilevisitors_overviewpagegroups"), 1, true)';
+    $peekers[] = 'new Peeker($(".setting_profilevisitors_allvisits"), $("#row_setting_profilevisitors_overviewpage, #row_setting_profilevisitors_overviewpagegroups"), 1, true)';
+    $peekers[] = 'new Peeker($(".setting_profilevisitors_overviewpage"), $("#row_setting_profilevisitors_overviewpagegroups"), 1, true)';
+}
+
 function profilevisitors_cleanup()
 {
     global $db;
@@ -296,7 +350,7 @@ function profilevisitors_deleted_user($users)
     }
 }
 
-function profilevisitors_run()
+function profilevisitors_member_profile()
 {
     global $mybb;
 
@@ -404,12 +458,169 @@ function profilevisitors_run()
                 {
                     $query = $db->simple_select("profilevisitors", "COUNT(*) AS allvisits", "uid = '{$myuid}'");
                     $allvisits = (int)$db->fetch_field($query, 'allvisits');
+
                     $lang->profilevisitors_header_all = $lang->sprintf($db->escape_string($lang->profilevisitors_header_all), $allvisits);
-                    eval('$profilevisitors_header_all = "' . $templates->get('member_profile_visitors_header_all') . '";');
+
+                    if ($mybb->settings['profilevisitors_overviewpage'] == 1 && is_member($mybb->settings['profilevisitors_overviewpagegroups']))
+                    {
+                        $lang->profilevisitors_header_all_more_title = $lang->sprintf($db->escape_string($lang->profilevisitors_header_all_more_title), htmlspecialchars_uni($memprofile['username']));
+                        eval('$profilevisitors_header_all = "' . $templates->get('member_profile_visitors_header_all_more') . '";');
+                    }
+                    else
+                    {
+                        eval('$profilevisitors_header_all = "' . $templates->get('member_profile_visitors_header_all') . '";');
+                    }
                 }
             }
         }
 
         eval('$profilevisits = "' . $templates->get('member_profile_visitors') . '";');
+    }
+}
+
+function profilevisitors_misc()
+{
+    global $mybb;
+
+    if ($mybb->settings['profilevisitors_enable'] != 1 || $mybb->settings['profilevisitors_hidegroups'] == "-1")
+    {
+        return;
+    }
+
+    $mybb->input['action'] = $mybb->get_input('action');
+
+    if (!$mybb->input['action'] || $mybb->input['action'] != "profile_visitors")
+    {
+        return;
+    }
+
+    global $lang;
+    $lang->load("profilevisitors");
+
+    if ($mybb->usergroup['canviewprofiles'] != 1 || !is_member($mybb->settings['profilevisitors_overviewpagegroups']))
+    {
+        error_no_permission();
+    }
+
+    $uid = $mybb->get_input('uid', MyBB::INPUT_INT);
+    if (!$uid)
+    {
+        error($lang->profilevisitors_uid_missing);
+    }
+
+    if ($uid && empty($user = get_user($uid)))
+    {
+        error($lang->profilevisitors_not_exists);
+    }
+
+    global $db, $headerinclude, $header, $theme, $templates, $footer;
+
+    $profile_visitors = '';
+
+    $where = "WHERE pv.uid = '{$uid}' AND u.uid != 0";
+
+    if (!empty($mybb->settings['profilevisitors_hidegroups']))
+    {
+        $where .= ' AND u.usergroup NOT IN (' . $mybb->settings['profilevisitors_hidegroups'] . ')';
+    }
+
+    $query = $db->query("
+            SELECT COUNT(vid) AS visitors
+            FROM " . TABLE_PREFIX . "profilevisitors pv
+            LEFT JOIN " . TABLE_PREFIX . "users u ON (u.uid=pv.vid)
+            {$where}
+        ");
+    $numvisitors = $db->fetch_field($query, "visitors");
+
+    if ($numvisitors > 0)
+    {
+        if (!$mybb->settings['membersperpage'])
+        {
+            $per_page = 10;
+        }
+        else
+        {
+            $per_page = $mybb->settings['membersperpage'];
+        }
+
+        $page = $mybb->get_input('page', MyBB::INPUT_INT);
+        if ($page && $page > 0)
+        {
+            $start = ($page - 1) * $per_page;
+        }
+        else
+        {
+            $start = 0;
+            $page = 1;
+        }
+
+        $multipage = multipage($numvisitors, $per_page, $page, "misc.php?action=profile_visitors&uid={$uid}");
+
+        $query_visitors = $db->query("
+                SELECT pv.vid, pv.dateline, u.username, u.usergroup, u.displaygroup, u.avatar, u.avatardimensions
+                FROM " . TABLE_PREFIX . "profilevisitors pv
+                LEFT JOIN " . TABLE_PREFIX . "users u ON (u.uid=pv.vid)
+                {$where}
+                ORDER BY pv.dateline DESC
+                LIMIT {$start}, {$per_page}
+            ");
+
+        $altbg = alt_trow();
+        while ($visitor = $db->fetch_array($query_visitors))
+        {
+            $useravatar = format_avatar($visitor['avatar'], $visitor['avatardimensions'], '50x50');
+            $visitor['avatar'] = "<div class=\"avatar_cont_50\"><img src=\"{$useravatar['image']}\" alt=\"\" {$useravatar['width_height']} /></div>";
+            $visitor['profilelink'] = build_profile_link(format_name(htmlspecialchars_uni($visitor['username']), $visitor['usergroup'], $visitor['displaygroup']), $visitor['vid']);
+            $visitor['lastvisit'] = my_date("relative", $visitor['dateline']);
+            eval('$profile_visitors_row .= "' . $templates->get('misc_profile_visitors_row', 1, 0) . '";');
+            $altbg = alt_trow();
+        }
+
+        $userlink = get_profile_link($uid);
+
+        $lang->profilevisitors_profile = $lang->sprintf($lang->profilevisitors_profile, $user['username']);
+        $lang->profilevisitors_visitors = $lang->sprintf($lang->profilevisitors_visitors, $user['username']);
+
+        add_breadcrumb($lang->profilevisitors_profile, $userlink);
+        add_breadcrumb($lang->profilevisitors_visitors);
+        eval('$profile_visitors = "' . $templates->get('misc_profile_visitors') . '";');
+        output_page($profile_visitors);
+        exit;
+    }
+    else
+    {
+        error($lang->profilevisitors_novisitors);
+    }
+}
+
+function profilevisitors_wol(&$user_activity)
+{
+    global $parameters, $uid_list;
+
+    if ($user_activity['activity'] == "misc")
+    {
+        if ($parameters['action'] == "profile_visitors")
+        {
+            if (isset($parameters['uid']) && $parameters['uid'] > 0)
+            {
+                $uid_list[$parameters['uid']] = $parameters['uid'];
+                $user_activity['uid'] = (int)$parameters['uid'];
+            }
+            $user_activity['activity'] = "misc_profile_visitors";
+        }
+    }
+}
+
+function profilevisitors_build_wol(&$plugin_array)
+{
+    global $lang, $mybb, $uid_list, $usernames;
+    $lang->load("profilevisitors");
+
+    if ($plugin_array['user_activity']['activity'] == "misc_profile_visitors")
+    {
+        if (!empty($usernames[$plugin_array['user_activity']['uid']]))
+        {
+            $plugin_array['location_name'] = $lang->sprintf($lang->profilevisitors_wol_profile_visitors, "misc.php?action=profile_visitors&amp;uid={$plugin_array['user_activity']['uid']}", get_profile_link($plugin_array['user_activity']['uid']), $usernames[$plugin_array['user_activity']['uid']]);
+        }
     }
 }

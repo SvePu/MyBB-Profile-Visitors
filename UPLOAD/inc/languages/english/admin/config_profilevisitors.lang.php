@@ -1,9 +1,10 @@
 <?php
-/*
-	Language admin file for Profile Visitors plugin for MyBB 1.8
-	Language: english
-	Copyright © 2015 Svepu
-	Last change: 2022-11-12
+
+/**
+ *  Language admin file for Profile Visitors plugin for MyBB 1.8
+ *  Language: english
+ *  Copyright © 2014 SvePu
+ *  Last change: 2023-01-02
 */
 
 $l['profilevisitors_desc'] = 'Add a Box in Users Profiles with Users Have Visit It';
@@ -30,3 +31,9 @@ $l['setting_profilevisitors_hidegroups_desc'] = 'Select user groups which member
 
 $l['setting_profilevisitors_allvisits'] = 'Show counter of all visits?';
 $l['setting_profilevisitors_allvisits_desc'] = 'Select YES to show a counter of all profile visits.';
+
+$l['setting_profilevisitors_overviewpage'] = 'Add link to visitors overview page';
+$l['setting_profilevisitors_overviewpage_desc'] = 'Select YES to add a link to visitors overview page.';
+
+$l['setting_profilevisitors_overviewpagegroups'] = 'Overview Page Groups';
+$l['setting_profilevisitors_overviewpagegroups_desc'] = 'Select user groups which can see the visitors overview page.';

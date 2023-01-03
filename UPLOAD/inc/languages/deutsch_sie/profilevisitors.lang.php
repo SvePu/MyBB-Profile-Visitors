@@ -1,12 +1,29 @@
 <?php
-/*
-	Language file for Profile Visitors plugin for MyBB 1.8
-	Language: deutsch_sie
-	Copyright © 2015 Svepu
-	Last change: 2022-11-12
-*/
+
+/**
+ *  Language file for Profile Visitors plugin for MyBB 1.8
+ *  Language: deutsch_sie
+ *  Copyright © 2014 SvePu
+ *  Last change: 2023-01-02
+ */
 
 $l['profilevisitors_header'] = 'Profilbesucher';
 $l['profilevisitors_header_info'] = 'Die letzen {1} Besucher';
 $l['profilevisitors_header_all'] = 'Gesamt: {1}';
-$l['profilevisitors_novisitors'] = 'Es waren noch keine Besucher auf deinem Profil.';
+$l['profilevisitors_header_all_more_title'] = 'Alle Profilbesucher von {1} ansehen';
+$l['profilevisitors_novisitors'] = 'Es waren noch keine Besucher auf diesem Profil.';
+
+//Misc.php
+$l['profilevisitors_profile'] = "Profil von {1}";
+$l['profilevisitors_visitors'] = "Profilbesucher von {1}";
+
+$l['profilevisitors_visitor_avatar'] = "Avatar";
+$l['profilevisitors_visitor_username'] = "Besuchername";
+$l['profilevisitors_visitor_visittime'] = "Besuchszeit";
+
+// Errors
+$l['profilevisitors_uid_missing'] = "Entschuldigung, aber es wurde kein Benutzer angegeben.";
+$l['profilevisitors_not_exists'] = "Entschuldigung, aber der Benutzer mit dieser ID existiert nicht.";
+
+// WOL
+$l['profilevisitors_wol_profile_visitors'] = "Sieht sich die <a href=\"{1}\">Profilbesucher Seite</a> von <a href=\"{2}\">{3}</a> an.";
