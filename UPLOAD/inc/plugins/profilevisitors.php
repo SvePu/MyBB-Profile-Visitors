@@ -2,8 +2,8 @@
 
 /**
  *  Main plugin file for Profile Visitors Plugin for MyBB 1.8
- *  Copyright © 2015 SvePu
- *  Last change: 2022-01-02 - v 2.1
+ *  Copyright © 2014 - 2023 SvePu
+ *  Last change: 2022-01-05 - v 2.1
  *  Licensed under the GNU GPL, version 3
  */
 
@@ -23,7 +23,7 @@ if (defined('THIS_SCRIPT'))
 
     if (THIS_SCRIPT == 'member.php')
     {
-        $templatelist .= 'member_profile_visitors, member_profile_visitors_visitor, member_profile_visitors_header_info, member_profile_visitors_header_all, member_profile_visitors_header_all_more';
+        $templatelist .= 'member_profile_visitors, member_profile_visitors_visitor, member_profile_visitors_header_info, member_profile_visitors_header_all, member_profile_visitors_footer';
     }
     elseif (THIS_SCRIPT == 'misc.php')
     {
@@ -34,6 +34,7 @@ if (defined('THIS_SCRIPT'))
 if (defined('IN_ADMINCP'))
 {
     $plugins->add_hook('admin_config_settings_begin', 'profilevisitors_settings');
+    $plugins->add_hook('admin_config_settings_change', 'profilevisitors_settings_check');
     $plugins->add_hook("admin_settings_print_peekers", 'profilevisitors_settings_peekers');
     $plugins->add_hook('datahandler_user_delete_start', 'profilevisitors_deleted_user');
 }
@@ -140,12 +141,15 @@ function profilevisitors_install()
     <tr>
         <td class="trow1">{$profilevisitors}</td>
     </tr>
+    {$profilevisitors_footer}
 </table>
 <br />',
         'member_profile_visitors_visitor' => '{$comma}<span title="({$visitdate} - {$visittime})">{$visitor[\'profilelink\']}</span>',
         'member_profile_visitors_header_info' => '<span class="smalltext">({$lang->profilevisitors_header_info})</span>',
         'member_profile_visitors_header_all' => '<span class="smalltext" style="float:right;">{$lang->profilevisitors_header_all}</span>',
-        'member_profile_visitors_header_all_more' => '<span class="smalltext" style="float:right;"><a href="misc.php?action=profile_visitors&amp;uid={$myuid}" title="{$lang->profilevisitors_header_all_more_title}">{$lang->profilevisitors_header_all}</a></span>',
+        'member_profile_visitors_footer' => '<tr>
+    <td class="tfoot"><span class="smalltext" style="float:right;"><a href="misc.php?action=profile_visitors&amp;uid={$myuid}">{$lang->profilevisitors_footer}</a></span></td>
+</tr>',
         'misc_profile_visitors' => '<html>
     <head>
         <title>{$mybb->settings[\'bbname\']} - {$lang->profilevisitors_visitors}</title>
@@ -324,6 +328,47 @@ function profilevisitors_settings()
     $lang->load('config_profilevisitors');
 }
 
+function profilevisitors_settings_check()
+{
+    global $mybb;
+
+    if (!$mybb->request_method == "post")
+    {
+        return;
+    }
+    else
+    {
+        global $db, $lang;
+
+        $gid = (int)$mybb->input['gid'];
+
+        $query = $db->simple_select('settinggroups', 'gid', "name = 'profilevisitors'", array('limit' => 1));
+        $plugin_gid = $db->fetch_field($query, 'gid');
+
+        if ($gid == (int)$plugin_gid)
+        {
+            if (isset($mybb->input['upsetting']['profilevisitors_hidegroups']) && $mybb->input['upsetting']['profilevisitors_hidegroups'] == 'all')
+            {
+                flash_message($lang->error_setting_profilevisitors_hidegroups_all_hided, 'error');
+                admin_redirect("index.php?module=config-settings&action=change&gid=" . $gid);
+            }
+
+            if (isset($mybb->input['upsetting']['profilevisitors_overviewpage_maxavatarsize']))
+            {
+                if (preg_match("/\b\d+[|x]{1}\d+\b/i", $mybb->input['upsetting']['profilevisitors_overviewpage_maxavatarsize']))
+                {
+                    $mybb->input['upsetting']['profilevisitors_overviewpage_maxavatarsize'] = str_replace('|', 'x', my_strtolower($mybb->input['upsetting']['profilevisitors_overviewpage_maxavatarsize']));
+                }
+                else
+                {
+                    flash_message($lang->error_setting_profilevisitors_overviewpage_maxavatarsize, 'error');
+                    admin_redirect("index.php?module=config-settings&action=change&gid=" . $gid);
+                }
+            }
+        }
+    }
+}
+
 function profilevisitors_settings_peekers(&$peekers)
 {
     $peekers[] = 'new Peeker($(".setting_profilevisitors_enable"), $("#row_setting_profilevisitors_showgroups, #row_setting_profilevisitors_limit, #row_setting_profilevisitors_hidegroups, #row_setting_profilevisitors_styled_usernames, #row_setting_profilevisitors_allvisits, #row_setting_profilevisitors_overviewpage_enable, #row_setting_profilevisitors_overviewpage_groups, #row_setting_profilevisitors_overviewpage_maxavatarsize"), 1, true)';
@@ -404,7 +449,7 @@ function profilevisitors_member_profile()
         $lang->load("profilevisitors");
 
         $lang->profilevisitors_header = $db->escape_string($lang->profilevisitors_header);
-        $profilevisitors_header_info = $profilevisitors_header_all = '';
+        $profilevisitors_header_info = $profilevisitors_header_all = $profilevisitors_footer = '';
         $profilevisitors = $db->escape_string($lang->profilevisitors_novisitors);
 
         if ($mybb->settings['profilevisitors_hidegroups'] != "-1")
@@ -466,16 +511,13 @@ function profilevisitors_member_profile()
                     $allvisits = (int)$db->fetch_field($query, 'allvisits');
 
                     $lang->profilevisitors_header_all = $lang->sprintf($db->escape_string($lang->profilevisitors_header_all), $allvisits);
+                    eval('$profilevisitors_header_all = "' . $templates->get('member_profile_visitors_header_all') . '";');
+                }
 
-                    if ($mybb->settings['profilevisitors_overviewpage_enable'] == 1 && is_member($mybb->settings['profilevisitors_overviewpage_groups']))
-                    {
-                        $lang->profilevisitors_header_all_more_title = $lang->sprintf($db->escape_string($lang->profilevisitors_header_all_more_title), htmlspecialchars_uni($memprofile['username']));
-                        eval('$profilevisitors_header_all = "' . $templates->get('member_profile_visitors_header_all_more') . '";');
-                    }
-                    else
-                    {
-                        eval('$profilevisitors_header_all = "' . $templates->get('member_profile_visitors_header_all') . '";');
-                    }
+                if ($mybb->settings['profilevisitors_overviewpage_enable'] == 1 && is_member($mybb->settings['profilevisitors_overviewpage_groups']))
+                {
+                    $lang->profilevisitors_footer = $lang->sprintf($db->escape_string($lang->profilevisitors_footer), htmlspecialchars_uni($memprofile['username']));
+                    eval('$profilevisitors_footer = "' . $templates->get('member_profile_visitors_footer') . '";');
                 }
             }
         }

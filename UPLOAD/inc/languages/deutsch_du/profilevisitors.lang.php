@@ -3,14 +3,14 @@
 /**
  *  Language file for Profile Visitors plugin for MyBB 1.8
  *  Language: deutsch_du
- *  Copyright © 2014 SvePu
- *  Last change: 2023-01-02
+ *  Copyright © 2014 - 2023 SvePu
+ *  Last change: 2023-01-05
  */
 
 $l['profilevisitors_header'] = 'Profilbesucher';
 $l['profilevisitors_header_info'] = 'Die letzen {1} Besucher';
 $l['profilevisitors_header_all'] = 'Gesamt: {1}';
-$l['profilevisitors_header_all_more_title'] = 'Alle Profilbesucher von {1} ansehen';
+$l['profilevisitors_footer'] = 'Alle Profilbesucher von {1} ansehen';
 $l['profilevisitors_novisitors'] = 'Es waren noch keine Besucher auf diesem Profil.';
 
 //Misc.php
