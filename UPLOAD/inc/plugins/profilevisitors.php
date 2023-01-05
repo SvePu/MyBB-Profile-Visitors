@@ -148,7 +148,7 @@ function profilevisitors_install()
         'member_profile_visitors_header_info' => '<span class="smalltext">({$lang->profilevisitors_header_info})</span>',
         'member_profile_visitors_header_all' => '<span class="smalltext" style="float:right;">{$lang->profilevisitors_header_all}</span>',
         'member_profile_visitors_footer' => '<tr>
-    <td class="tfoot"><span class="smalltext" style="float:right;"><a href="misc.php?action=profile_visitors&amp;uid={$myuid}">{$lang->profilevisitors_footer}</a></span></td>
+    <td class="tfoot"><span class="smalltext" style="float:right;"><a href="misc.php?action=profile_visitors&amp;uid={$mem_uid}">{$lang->profilevisitors_footer}</a></span></td>
 </tr>',
         'misc_profile_visitors' => '<html>
     <head>
@@ -372,7 +372,6 @@ function profilevisitors_settings_check()
 function profilevisitors_settings_peekers(&$peekers)
 {
     $peekers[] = 'new Peeker($(".setting_profilevisitors_enable"), $("#row_setting_profilevisitors_showgroups, #row_setting_profilevisitors_limit, #row_setting_profilevisitors_hidegroups, #row_setting_profilevisitors_styled_usernames, #row_setting_profilevisitors_allvisits, #row_setting_profilevisitors_overviewpage_enable, #row_setting_profilevisitors_overviewpage_groups, #row_setting_profilevisitors_overviewpage_maxavatarsize"), 1, true)';
-    $peekers[] = 'new Peeker($(".setting_profilevisitors_allvisits"), $("#row_setting_profilevisitors_overviewpage_enable, #row_setting_profilevisitors_overviewpage_groups, #row_setting_profilevisitors_overviewpage_maxavatarsize"), 1, true)';
     $peekers[] = 'new Peeker($(".setting_profilevisitors_overviewpage_enable"), $("#row_setting_profilevisitors_overviewpage_groups, #row_setting_profilevisitors_overviewpage_maxavatarsize"), 1, true)';
 }
 
@@ -412,20 +411,20 @@ function profilevisitors_member_profile()
 
     global $db, $memprofile, $profilevisits;
 
-    $myuid = (int)$memprofile['uid'];
-    $vuid = (int)$mybb->user['uid'];
+    $mem_uid = (int)$memprofile['uid'];
+    $vis_uid = (int)$mybb->user['uid'];
 
-    if ($vuid && $vuid != $myuid)
+    if ($vis_uid > 0 && $vis_uid != $mem_uid)
     {
-        $where = "uid = '" . $myuid . "' AND vid = '" . $vuid . "'";
+        $where = "uid = '{$mem_uid}' AND vid = '{$vis_uid}'";
 
         $query = $db->simple_select('profilevisitors', '*', $where);
 
         if (!$db->num_rows($query))
         {
             $newinsert = array(
-                'uid' => (int)$myuid,
-                'vid' => (int)$vuid,
+                'uid' => (int)$mem_uid,
+                'vid' => (int)$vis_uid,
                 'dateline' => TIME_NOW
             );
 
@@ -454,7 +453,7 @@ function profilevisitors_member_profile()
 
         if ($mybb->settings['profilevisitors_hidegroups'] != "-1")
         {
-            $where = "WHERE pv.uid = '{$myuid}'";
+            $where = "WHERE pv.uid = '{$mem_uid}'";
 
             if (!empty($mybb->settings['profilevisitors_hidegroups']))
             {
@@ -476,7 +475,7 @@ function profilevisitors_member_profile()
                 {$limit}
             ");
 
-            if ($db->num_rows($query))
+            if ($db->num_rows($query) > 0)
             {
                 $profilevisitors = $comma = '';
                 while ($visitor = $db->fetch_array($query))
@@ -507,7 +506,7 @@ function profilevisitors_member_profile()
 
                 if ($mybb->settings['profilevisitors_allvisits'] == 1)
                 {
-                    $query = $db->simple_select("profilevisitors", "COUNT(*) AS allvisits", "uid = '{$myuid}'");
+                    $query = $db->simple_select("profilevisitors", "COUNT(*) AS allvisits", "uid = '{$mem_uid}'");
                     $allvisits = (int)$db->fetch_field($query, 'allvisits');
 
                     $lang->profilevisitors_header_all = $lang->sprintf($db->escape_string($lang->profilevisitors_header_all), $allvisits);
