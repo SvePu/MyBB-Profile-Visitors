@@ -27,7 +27,7 @@ if (defined('THIS_SCRIPT'))
     }
     elseif (THIS_SCRIPT == 'misc.php')
     {
-        $templatelist .= 'misc_profile_visitors_row, misc_profile_visitors';
+        $templatelist .= 'misc_profile_visitors_orderarrow, misc_profile_visitors_visitor_avatar, misc_profile_visitors_visitor, misc_profile_visitors';
     }
 }
 
@@ -158,9 +158,9 @@ function profilevisitors_install()
                 <td class="thead" colspan="3"><strong>{$lang->profilevisitors_visitors}</strong></td>
             </tr>
             <tr>
-                <td class="tcat" width="1%"><span class="smalltext"><strong>{$lang->profilevisitors_visitor_avatar}</strong></span></td>
-                <td class="tcat"><span class="smalltext"><strong>{$lang->profilevisitors_visitor_username}</strong></span></td>
-                <td class="tcat" width="30%" align="center"><span class="smalltext"><strong>{$lang->profilevisitors_visitor_visittime}</strong></span></td>
+                <td class="tcat" width="1%" align="center"><span class="smalltext"><strong>{$lang->profilevisitors_visitor_avatar}</strong></span></td>
+                <td class="tcat"><span class="smalltext"><strong><a href="misc.php?action=profile_visitors&amp;uid={$uid}&amp;sortby=username&amp;order=asc">{$lang->profilevisitors_visitor_username}</a> {$orderarrow[\'username\']}</strong></span></td>
+                <td class="tcat" width="30%" align="center"><span class="smalltext"><strong><a href="misc.php?action=profile_visitors&amp;uid={$uid}&amp;sortby=dateline&amp;order=desc">{$lang->profilevisitors_visitor_visittime}</a> {$orderarrow[\'dateline\']}</strong></span></td>
             </tr>
             {$profile_visitors_row}
             <tr>
@@ -171,11 +171,13 @@ function profilevisitors_install()
         {$footer}
     </body>
 </html>',
-        'misc_profile_visitors_row' => '<tr>
+        'misc_profile_visitors_visitor' => '<tr>
     <td class="{$altbg}" align="center">{$visitor[\'avatar\']}</td>
     <td class="{$altbg}">{$visitor[\'profilelink\']}</td>
-    <td class="{$altbg}"align="center">{$visitor[\'lastvisit\']}</td>
-</tr>'
+    <td class="{$altbg}" width="30%" align="center">{$visitor[\'lastvisit\']}</td>
+</tr>',
+        'misc_profile_visitors_visitor_avatar' => '<img src="{$useravatar[\'image\']}" alt="{$useravatar[\'alt\']}" {$useravatar[\'width_height\']} />',
+        'misc_profile_visitors_orderarrow' => '<span class="smalltext">[<a href="misc.php?action=profile_visitors&amp;uid={$uid}&amp;sortby={$sortby}&amp;order={$oppsortnext}">{$oppsort}</a>]</span>'
     );
 
     foreach ($templates as $name => $template)
@@ -239,6 +241,10 @@ function profilevisitors_install()
         'overviewpagegroups' => array(
             'optionscode' => 'groupselect',
             'value' => '2,3,4,6'
+        ),
+        'maxavatarsize' => array(
+            'optionscode' => 'text',
+            'value' => '70x70'
         )
     );
 
@@ -321,8 +327,8 @@ function profilevisitors_settings()
 function profilevisitors_settings_peekers(&$peekers)
 {
     $peekers[] = 'new Peeker($(".setting_profilevisitors_enable"), $("#row_setting_profilevisitors_showgroups, #row_setting_profilevisitors_limit, #row_setting_profilevisitors_hidegroups, #row_setting_profilevisitors_styled_usernames, #row_setting_profilevisitors_allvisits, #row_setting_profilevisitors_overviewpage, #row_setting_profilevisitors_overviewpagegroups"), 1, true)';
-    $peekers[] = 'new Peeker($(".setting_profilevisitors_allvisits"), $("#row_setting_profilevisitors_overviewpage, #row_setting_profilevisitors_overviewpagegroups"), 1, true)';
-    $peekers[] = 'new Peeker($(".setting_profilevisitors_overviewpage"), $("#row_setting_profilevisitors_overviewpagegroups"), 1, true)';
+    $peekers[] = 'new Peeker($(".setting_profilevisitors_allvisits"), $("#row_setting_profilevisitors_overviewpage, #row_setting_profilevisitors_overviewpagegroups, #row_setting_profilevisitors_maxavatarsize"), 1, true)';
+    $peekers[] = 'new Peeker($(".setting_profilevisitors_overviewpage"), $("#row_setting_profilevisitors_overviewpagegroups, #row_setting_profilevisitors_maxavatarsize"), 1, true)';
 }
 
 function profilevisitors_cleanup()
@@ -531,10 +537,53 @@ function profilevisitors_misc()
             LEFT JOIN " . TABLE_PREFIX . "users u ON (u.uid=pv.vid)
             {$where}
         ");
+
     $numvisitors = $db->fetch_field($query, "visitors");
 
     if ($numvisitors > 0)
     {
+        if (!isset($lang->desc))
+        {
+            $lang->load("memberlist");
+        }
+
+        $mybb->input['order'] = htmlspecialchars_uni($mybb->get_input('order'));
+        $ordersel = array('asc' => '', 'desc');
+        switch (my_strtolower($mybb->input['order']))
+        {
+            case "asc":
+                $sortordernow = "asc";
+                $ordersel['asc'] = "selected=\"selected\"";
+                $oppsort = $lang->desc;
+                $oppsortnext = "desc";
+                break;
+            default:
+                $sortordernow = "desc";
+                $ordersel['desc'] = "selected=\"selected\"";
+                $oppsort = $lang->asc;
+                $oppsortnext = "asc";
+                break;
+        }
+
+        $sortby = htmlspecialchars_uni($mybb->get_input('sortby'));
+        switch ($mybb->get_input('sortby'))
+        {
+            case "username":
+                $sortfield = "u.username";
+                break;
+            default:
+                $sortby = "dateline";
+                $sortfield = "pv.dateline";
+                $mybb->input['sortby'] = "dateline";
+                break;
+        }
+        $orderarrow = $sortsel = array('username' => '', 'dateline' => '');
+        $sortsel[$sortby] = "selected=\"selected\"";
+
+        eval("\$orderarrow['$sortby'] = \"" . $templates->get("misc_profile_visitors_orderarrow") . "\";");
+
+
+
         if (!$mybb->settings['membersperpage'])
         {
             $per_page = 10;
@@ -555,25 +604,46 @@ function profilevisitors_misc()
             $page = 1;
         }
 
-        $multipage = multipage($numvisitors, $per_page, $page, "misc.php?action=profile_visitors&uid={$uid}");
+        if ($mybb->input['order'] || ($sortby && $sortby != "dateline"))
+        {
+            $page_url = "misc.php?action=profile_visitors&uid={$uid}&sortby={$sortby}&order={$sortordernow}";
+        }
+        else
+        {
+            $page_url = "misc.php?action=profile_visitors&uid={$uid}";
+        }
+
+        $multipage = multipage($numvisitors, $per_page, $page, $page_url);
 
         $query_visitors = $db->query("
                 SELECT pv.vid, pv.dateline, u.username, u.usergroup, u.displaygroup, u.avatar, u.avatardimensions
                 FROM " . TABLE_PREFIX . "profilevisitors pv
                 LEFT JOIN " . TABLE_PREFIX . "users u ON (u.uid=pv.vid)
                 {$where}
-                ORDER BY pv.dateline DESC
+                ORDER BY {$sortfield} {$sortordernow}
                 LIMIT {$start}, {$per_page}
             ");
 
         $altbg = alt_trow();
         while ($visitor = $db->fetch_array($query_visitors))
         {
-            $useravatar = format_avatar($visitor['avatar'], $visitor['avatardimensions'], '50x50');
-            $visitor['avatar'] = "<div class=\"avatar_cont_50\"><img src=\"{$useravatar['image']}\" alt=\"\" {$useravatar['width_height']} /></div>";
-            $visitor['profilelink'] = build_profile_link(format_name(htmlspecialchars_uni($visitor['username']), $visitor['usergroup'], $visitor['displaygroup']), $visitor['vid']);
+            $visitor['username'] = htmlspecialchars_uni($visitor['username']);
+
+            if (!isset($mybb->settings['profilevisitors_maxavatarsize']) || empty($mybb->settings['profilevisitors_maxavatarsize']))
+            {
+                $mybb->settings['profilevisitors_maxavatarsize'] = $mybb->settings['maxavatardims'];
+            }
+
+            $useravatar = format_avatar($visitor['avatar'], $visitor['avatardimensions'], my_strtolower($mybb->settings['profilevisitors_maxavatarsize']));
+            $useravatar['alt'] = $lang->avatar . '-' . $visitor['username'];
+
+            eval("\$visitor['avatar'] = \"" . $templates->get("misc_profile_visitors_visitor_avatar") . "\";");
+
+            $visitor['profilelink'] = build_profile_link(format_name($visitor['username'], $visitor['usergroup'], $visitor['displaygroup']), $visitor['vid']);
             $visitor['lastvisit'] = my_date("relative", $visitor['dateline']);
-            eval('$profile_visitors_row .= "' . $templates->get('misc_profile_visitors_row', 1, 0) . '";');
+
+            eval('$profile_visitors_row .= "' . $templates->get('misc_profile_visitors_visitor', 1, 0) . '";');
+
             $altbg = alt_trow();
         }
 

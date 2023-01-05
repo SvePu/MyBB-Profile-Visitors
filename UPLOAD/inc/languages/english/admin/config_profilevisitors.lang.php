@@ -5,7 +5,7 @@
  *  Language: english
  *  Copyright © 2014 SvePu
  *  Last change: 2023-01-02
-*/
+ */
 
 $l['profilevisitors_desc'] = 'Add a Box in Users Profiles with Users Have Visit It';
 $l['profilevisitors_uninstall'] = 'Profile Visitors - Uninstallation';
@@ -37,3 +37,6 @@ $l['setting_profilevisitors_overviewpage_desc'] = 'Select YES to add a link to v
 
 $l['setting_profilevisitors_overviewpagegroups'] = 'Overview Page Groups';
 $l['setting_profilevisitors_overviewpagegroups_desc'] = 'Select user groups which can see the visitors overview page.';
+
+$l['setting_profilevisitors_maxavatarsize'] = 'Visitor Avatar Dimensions';
+$l['setting_profilevisitors_maxavatarsize_desc'] = "The dimensions of the visitor avatar; width and height separated by 'x' or '|' (e.g. 70|70 or 70x70).";

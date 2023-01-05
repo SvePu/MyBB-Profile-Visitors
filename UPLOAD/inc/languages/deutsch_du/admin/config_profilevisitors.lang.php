@@ -5,7 +5,7 @@
  *  Language: deutsch_du
  *  Copyright © 2014 SvePu
  *  Last change: 2023-01-02
-*/
+ */
 
 $l['profilevisitors_desc'] = 'Mit diesem Plugin werden Besucher eines Mitglieder-Profils aufgelistet.';
 $l['profilevisitors_uninstall'] = 'Profil Besucher - Deinstallation';
@@ -37,3 +37,6 @@ $l['setting_profilevisitors_overviewpage_desc'] = 'Wähle JA um einen Link zur P
 
 $l['setting_profilevisitors_overviewpagegroups'] = 'Profilbesucher Seite Gruppen';
 $l['setting_profilevisitors_overviewpagegroups_desc'] = 'Wähle die Gruppen, die die Profilbesucher Seite sehen dürfen.';
+
+$l['setting_profilevisitors_maxavatarsize'] = 'Besucher-Avatar-Größe';
+$l['setting_profilevisitors_maxavatarsize_desc'] = "Die Abmessungen des Besucher-Avatars; Breite und Höhe getrennt durch 'x' oder '|' (z.B. 70|70 oder 70x70).";
