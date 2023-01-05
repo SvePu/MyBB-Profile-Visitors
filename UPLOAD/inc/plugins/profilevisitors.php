@@ -488,7 +488,7 @@ function profilevisitors_misc()
 {
     global $mybb;
 
-    if ($mybb->settings['profilevisitors_enable'] != 1 || $mybb->settings['profilevisitors_overviewpage_enable'] != 1 || $mybb->settings['profilevisitors_hidegroups'] == "-1")
+    if (!isset($mybb->settings['profilevisitors_enable']) || (isset($mybb->settings['profilevisitors_enable']) && $mybb->settings['profilevisitors_enable'] != 1))
     {
         return;
     }
@@ -500,24 +500,29 @@ function profilevisitors_misc()
         return;
     }
 
+    global $lang;
+    $lang->load("profilevisitors");
+
+    if ($mybb->settings['profilevisitors_overviewpage_enable'] != 1)
+    {
+        error($lang->error_profilevisitors_overviewpage_disabled);
+    }
+
     if ($mybb->usergroup['canviewprofiles'] != 1 || !is_member($mybb->settings['profilevisitors_overviewpage_groups']))
     {
         error_no_permission();
     }
 
-    global $lang;
-    $lang->load("profilevisitors");
-
     $uid = $mybb->get_input('uid', MyBB::INPUT_INT);
     if (empty($uid))
     {
-        error($lang->profilevisitors_uid_missing);
+        error($lang->error_profilevisitors_uid_missing);
     }
 
     $user = get_user($uid);
     if (empty($user) || !is_array($user))
     {
-        error($lang->profilevisitors_not_exists);
+        error($lang->error_profilevisitors_not_exists);
     }
 
     global $db, $headerinclude, $header, $theme, $templates, $footer;

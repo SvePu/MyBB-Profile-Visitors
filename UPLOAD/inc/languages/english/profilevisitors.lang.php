@@ -22,8 +22,9 @@ $l['profilevisitors_visitor_username'] = "Visitorname";
 $l['profilevisitors_visitor_visittime'] = "Time of Visiting";
 
 // Errors
-$l['profilevisitors_uid_missing'] = "Sorry, but no user was specified.";
-$l['profilevisitors_not_exists'] = "Sorry, but user with this ID doesn't exist.";
+$l['error_profilevisitors_overviewpage_disabled'] = "Sorry, but this page was disabled by administrator.";
+$l['error_profilevisitors_uid_missing'] = "Sorry, but no user was specified.";
+$l['error_profilevisitors_not_exists'] = "Sorry, but user with this ID doesn't exist.";
 
 // WOL
 $l['profilevisitors_wol_profile_visitors'] = "Viewing <a href=\"{1}\">Profile Visitors Page</a> of <a href=\"{2}\">{3}</a>.";

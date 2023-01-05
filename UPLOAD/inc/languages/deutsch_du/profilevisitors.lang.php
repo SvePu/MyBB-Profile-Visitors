@@ -22,8 +22,9 @@ $l['profilevisitors_visitor_username'] = "Besuchername";
 $l['profilevisitors_visitor_visittime'] = "Besuchszeit";
 
 // Errors
-$l['profilevisitors_uid_missing'] = "Entschuldigung, aber es wurde kein Benutzer angegeben.";
-$l['profilevisitors_not_exists'] = "Entschuldigung, aber der Benutzer mit dieser ID existiert nicht.";
+$l['error_profilevisitors_overviewpage_disabled'] = "Entschuldigung, aber diese Seite wurde vom Administrator deaktiviert.";
+$l['error_profilevisitors_uid_missing'] = "Entschuldigung, aber es wurde kein Benutzer angegeben.";
+$l['error_profilevisitors_not_exists'] = "Entschuldigung, aber der Benutzer mit dieser ID existiert nicht.";
 
 // WOL
 $l['profilevisitors_wol_profile_visitors'] = "Sieht sich die <a href=\"{1}\">Profilbesucher Seite</a> von <a href=\"{2}\">{3}</a> an.";
