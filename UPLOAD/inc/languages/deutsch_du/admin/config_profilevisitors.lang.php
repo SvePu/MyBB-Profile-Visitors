@@ -32,11 +32,11 @@ $l['setting_profilevisitors_hidegroups_desc'] = 'Wähle Benutzergruppen, deren M
 $l['setting_profilevisitors_allvisits'] = 'Zähler aller Besucher anzeigen?';
 $l['setting_profilevisitors_allvisits_desc'] = 'Wähle JA um den Zähler anzuzeigen!';
 
-$l['setting_profilevisitors_overviewpage'] = 'Link zur Profilbesucher Seite hinzufügen?';
-$l['setting_profilevisitors_overviewpage_desc'] = 'Wähle JA um einen Link zur Profilbesucher Seite einzufügen!';
+$l['setting_profilevisitors_overviewpage_enable'] = 'Link zur Profilbesucher Seite hinzufügen?';
+$l['setting_profilevisitors_overviewpage_enable_desc'] = 'Wähle JA um einen Link zur Profilbesucher Seite einzufügen!';
 
-$l['setting_profilevisitors_overviewpagegroups'] = 'Profilbesucher Seite Gruppen';
-$l['setting_profilevisitors_overviewpagegroups_desc'] = 'Wähle die Gruppen, die die Profilbesucher Seite sehen dürfen.';
+$l['setting_profilevisitors_overviewpage_groups'] = 'Profilbesucher Seite Gruppen';
+$l['setting_profilevisitors_overviewpage_groups_desc'] = 'Wähle die Gruppen, die die Profilbesucher Seite sehen dürfen.';
 
-$l['setting_profilevisitors_maxavatarsize'] = 'Besucher-Avatar-Größe';
-$l['setting_profilevisitors_maxavatarsize_desc'] = "Die Abmessungen des Besucher-Avatars; Breite und Höhe getrennt durch 'x' oder '|' (z.B. 70|70 oder 70x70).";
+$l['setting_profilevisitors_overviewpage_maxavatarsize'] = 'Besucher-Avatar-Größe';
+$l['setting_profilevisitors_overviewpage_maxavatarsize_desc'] = "Die Abmessungen des Besucher-Avatars; Breite und Höhe getrennt durch 'x' oder '|' (z.B. 70|70 oder 70x70).";

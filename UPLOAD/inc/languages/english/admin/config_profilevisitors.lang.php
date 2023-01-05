@@ -32,11 +32,11 @@ $l['setting_profilevisitors_hidegroups_desc'] = 'Select user groups which member
 $l['setting_profilevisitors_allvisits'] = 'Show counter of all visits?';
 $l['setting_profilevisitors_allvisits_desc'] = 'Select YES to show a counter of all profile visits.';
 
-$l['setting_profilevisitors_overviewpage'] = 'Add link to visitors overview page';
-$l['setting_profilevisitors_overviewpage_desc'] = 'Select YES to add a link to visitors overview page.';
+$l['setting_profilevisitors_overviewpage_enable'] = 'Add link to visitors overview page';
+$l['setting_profilevisitors_overviewpage_enable_desc'] = 'Select YES to add a link to visitors overview page.';
 
-$l['setting_profilevisitors_overviewpagegroups'] = 'Overview Page Groups';
-$l['setting_profilevisitors_overviewpagegroups_desc'] = 'Select user groups which can see the visitors overview page.';
+$l['setting_profilevisitors_overviewpage_groups'] = 'Overview Page Groups';
+$l['setting_profilevisitors_overviewpage_groups_desc'] = 'Select user groups which can see the visitors overview page.';
 
-$l['setting_profilevisitors_maxavatarsize'] = 'Visitor Avatar Dimensions';
-$l['setting_profilevisitors_maxavatarsize_desc'] = "The dimensions of the visitor avatar; width and height separated by 'x' or '|' (e.g. 70|70 or 70x70).";
+$l['setting_profilevisitors_overviewpage_maxavatarsize'] = 'Visitor Avatar Dimensions';
+$l['setting_profilevisitors_overviewpage_maxavatarsize_desc'] = "The dimensions of the visitor avatar; width and height separated by 'x' or '|' (e.g. 70|70 or 70x70).";

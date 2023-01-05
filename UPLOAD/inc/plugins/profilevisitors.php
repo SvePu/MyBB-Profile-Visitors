@@ -234,15 +234,15 @@ function profilevisitors_install()
             'optionscode' => 'yesno',
             'value' => 1
         ),
-        'overviewpage' => array(
+        'overviewpage_enable' => array(
             'optionscode' => 'yesno',
             'value' => 1
         ),
-        'overviewpagegroups' => array(
+        'overviewpage_groups' => array(
             'optionscode' => 'groupselect',
             'value' => '2,3,4,6'
         ),
-        'maxavatarsize' => array(
+        'overviewpage_maxavatarsize' => array(
             'optionscode' => 'text',
             'value' => '70x70'
         )
@@ -326,9 +326,9 @@ function profilevisitors_settings()
 
 function profilevisitors_settings_peekers(&$peekers)
 {
-    $peekers[] = 'new Peeker($(".setting_profilevisitors_enable"), $("#row_setting_profilevisitors_showgroups, #row_setting_profilevisitors_limit, #row_setting_profilevisitors_hidegroups, #row_setting_profilevisitors_styled_usernames, #row_setting_profilevisitors_allvisits, #row_setting_profilevisitors_overviewpage, #row_setting_profilevisitors_overviewpagegroups"), 1, true)';
-    $peekers[] = 'new Peeker($(".setting_profilevisitors_allvisits"), $("#row_setting_profilevisitors_overviewpage, #row_setting_profilevisitors_overviewpagegroups, #row_setting_profilevisitors_maxavatarsize"), 1, true)';
-    $peekers[] = 'new Peeker($(".setting_profilevisitors_overviewpage"), $("#row_setting_profilevisitors_overviewpagegroups, #row_setting_profilevisitors_maxavatarsize"), 1, true)';
+    $peekers[] = 'new Peeker($(".setting_profilevisitors_enable"), $("#row_setting_profilevisitors_showgroups, #row_setting_profilevisitors_limit, #row_setting_profilevisitors_hidegroups, #row_setting_profilevisitors_styled_usernames, #row_setting_profilevisitors_allvisits, #row_setting_profilevisitors_overviewpage_enable, #row_setting_profilevisitors_overviewpage_groups, #row_setting_profilevisitors_overviewpage_maxavatarsize"), 1, true)';
+    $peekers[] = 'new Peeker($(".setting_profilevisitors_allvisits"), $("#row_setting_profilevisitors_overviewpage_enable, #row_setting_profilevisitors_overviewpage_groups, #row_setting_profilevisitors_overviewpage_maxavatarsize"), 1, true)';
+    $peekers[] = 'new Peeker($(".setting_profilevisitors_overviewpage_enable"), $("#row_setting_profilevisitors_overviewpage_groups, #row_setting_profilevisitors_overviewpage_maxavatarsize"), 1, true)';
 }
 
 function profilevisitors_cleanup()
@@ -467,7 +467,7 @@ function profilevisitors_member_profile()
 
                     $lang->profilevisitors_header_all = $lang->sprintf($db->escape_string($lang->profilevisitors_header_all), $allvisits);
 
-                    if ($mybb->settings['profilevisitors_overviewpage'] == 1 && is_member($mybb->settings['profilevisitors_overviewpagegroups']))
+                    if ($mybb->settings['profilevisitors_overviewpage_enable'] == 1 && is_member($mybb->settings['profilevisitors_overviewpage_groups']))
                     {
                         $lang->profilevisitors_header_all_more_title = $lang->sprintf($db->escape_string($lang->profilevisitors_header_all_more_title), htmlspecialchars_uni($memprofile['username']));
                         eval('$profilevisitors_header_all = "' . $templates->get('member_profile_visitors_header_all_more') . '";');
@@ -488,7 +488,7 @@ function profilevisitors_misc()
 {
     global $mybb;
 
-    if ($mybb->settings['profilevisitors_enable'] != 1 || $mybb->settings['profilevisitors_hidegroups'] == "-1")
+    if ($mybb->settings['profilevisitors_enable'] != 1 || $mybb->settings['profilevisitors_overviewpage_enable'] != 1 || $mybb->settings['profilevisitors_hidegroups'] == "-1")
     {
         return;
     }
@@ -500,13 +500,13 @@ function profilevisitors_misc()
         return;
     }
 
-    global $lang;
-    $lang->load("profilevisitors");
-
-    if ($mybb->usergroup['canviewprofiles'] != 1 || !is_member($mybb->settings['profilevisitors_overviewpagegroups']))
+    if ($mybb->usergroup['canviewprofiles'] != 1 || !is_member($mybb->settings['profilevisitors_overviewpage_groups']))
     {
         error_no_permission();
     }
+
+    global $lang;
+    $lang->load("profilevisitors");
 
     $uid = $mybb->get_input('uid', MyBB::INPUT_INT);
     if (empty($uid))
@@ -629,12 +629,12 @@ function profilevisitors_misc()
         {
             $visitor['username'] = htmlspecialchars_uni($visitor['username']);
 
-            if (!isset($mybb->settings['profilevisitors_maxavatarsize']) || empty($mybb->settings['profilevisitors_maxavatarsize']))
+            if (!isset($mybb->settings['profilevisitors_overviewpage_maxavatarsize']) || empty($mybb->settings['profilevisitors_overviewpage_maxavatarsize']))
             {
-                $mybb->settings['profilevisitors_maxavatarsize'] = $mybb->settings['maxavatardims'];
+                $mybb->settings['profilevisitors_overviewpage_maxavatarsize'] = $mybb->settings['maxavatardims'];
             }
 
-            $useravatar = format_avatar($visitor['avatar'], $visitor['avatardimensions'], my_strtolower($mybb->settings['profilevisitors_maxavatarsize']));
+            $useravatar = format_avatar($visitor['avatar'], $visitor['avatardimensions'], my_strtolower($mybb->settings['profilevisitors_overviewpage_maxavatarsize']));
             $useravatar['alt'] = $lang->avatar . '-' . $visitor['username'];
 
             eval("\$visitor['avatar'] = \"" . $templates->get("misc_profile_visitors_visitor_avatar") . "\";");
