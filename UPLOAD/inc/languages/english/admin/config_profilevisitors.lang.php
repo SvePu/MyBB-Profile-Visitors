@@ -11,8 +11,8 @@ $l['profilevisitors_desc'] = 'Add a Box in Users Profiles page with list of User
 $l['profilevisitors_uninstall'] = 'Profile Visitors - Uninstallation';
 $l['profilevisitors_uninstall_message'] = 'Do you wish to drop all plugin entries from the database?';
 
-$l['setting_group_profilevisitors'] = 'Profil Visitors Settings';
-$l['setting_group_profilevisitors_desc'] = 'Setting of the Profil Visitors plugin';
+$l['setting_group_profilevisitors'] = 'Profile Visitors Settings';
+$l['setting_group_profilevisitors_desc'] = 'Setting of the profile visitors plugin';
 
 $l['setting_profilevisitors_enable'] = 'Do you want enable this feature?';
 $l['setting_profilevisitors_enable_desc'] = 'Set YES to enable it!';
