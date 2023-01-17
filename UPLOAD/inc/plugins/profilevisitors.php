@@ -12,6 +12,14 @@ if (!defined('IN_MYBB'))
     die('This file cannot be accessed directly.');
 }
 
+define(
+    'PROFILEVISITORS_GROUP_OPTIONS',
+    array(
+        'canviewprofilevisitors',
+        'hideonprofilevisitors'
+    )
+);
+
 if (defined('THIS_SCRIPT'))
 {
     global $templatelist;
@@ -36,6 +44,8 @@ if (defined('IN_ADMINCP'))
     $plugins->add_hook('admin_config_settings_begin', 'profilevisitors_settings');
     $plugins->add_hook('admin_config_settings_change', 'profilevisitors_settings_check');
     $plugins->add_hook("admin_settings_print_peekers", 'profilevisitors_settings_peekers');
+    $plugins->add_hook("admin_user_groups_edit", "profilevisitors_admin_user_groups_edit");
+    $plugins->add_hook("admin_user_groups_edit_commit", "profilevisitors_admin_user_groups_edit_commit");
     $plugins->add_hook('datahandler_user_delete_start', 'profilevisitors_deleted_user');
 }
 else
@@ -59,31 +69,30 @@ function profilevisitors_info()
         'authorsite'    => 'https://github.com/SvePu',
         'version'       => '2.1',
         'compatibility' => '18*',
-        'codename'      => 'profilevisitors'
+        'codename'      => 'profilevisitors',
+        'minphpversion' => '7.0'
     );
 
-    $info_desc = '';
-    $gid_result = $db->simple_select('settinggroups', 'gid', "name = 'profilevisitors'", array('limit' => 1));
-    $settings_group = $db->fetch_array($gid_result);
-    if (!empty($settings_group['gid']))
+    if (version_compare(PHP_VERSION, $info['minphpversion'], '<'))
     {
-        $info_desc .= "<span style=\"font-size: 0.9em;\">(~<a href=\"index.php?module=config-settings&action=change&gid=" . $settings_group['gid'] . "\"> " . $db->escape_string($lang->setting_group_profilevisitors) . " </a>~)</span>";
+        $info['description'] .= '<br /><span style="line-height: 2.5em;display: inline-block;font-weight: 600;color:red;"><img style="vertical-align: sub;" src="./styles/default/images/icons/error.png" alt="settings_icon" width="16" height="16" />&nbsp;' . $lang->sprintf($db->escape_string($lang->error_wrong_php_version), $info['minphpversion']) . '</span>';
     }
 
-    if (!empty($plugins_cache) && is_array($plugins_cache) && is_array($plugins_cache['active']) && isset($plugins_cache['active']['profilevisitors']))
+    if (is_array($plugins_cache) && is_array($plugins_cache['active']) && isset($plugins_cache['active']['profilevisitors']))
     {
-        $info_desc .= '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" style="float: right;" target="_blank" />
-<input type="hidden" name="cmd" value="_s-xclick" />
-<input type="hidden" name="hosted_button_id" value="VGQ4ZDT8M7WS2" />
-<input type="image" src="https://www.paypalobjects.com/webstatic/en_US/btn/btn_donate_pp_142x27.png" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!" />
-<img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1" />
-</form>';
-    }
+        $query = $db->simple_select('settinggroups', 'gid', "name = 'profilevisitors'", array('limit' => 1));
+        $settings_group = (int)$db->fetch_field($query, 'gid');
+        if ($settings_group)
+        {
+            $info['description'] .= '<br /><span style="line-height: 2.5em;display: inline-block;font-weight: 600;font-style: italic;"><a href="index.php?module=config-settings&amp;action=change&amp;gid=' . $settings_group . '"><img style="vertical-align: sub;" src="./styles/default/images/icons/custom.png" title="' . $db->escape_string($lang->setting_profilevisitors_main) . '" alt="settings_icon" width="16" height="16" />&nbsp;' . $db->escape_string($lang->setting_profilevisitors_main) . '</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="index.php?module=user-groups"><img style="vertical-align: sub;" src="./styles/default/images/icons/group.png" title="' . $db->escape_string($lang->setting_profilevisitors_groups) . '" alt="group_icon" width="16" height="16" />&nbsp;' . $db->escape_string($lang->setting_profilevisitors_groups) . '</a></span>';
 
-
-    if ($info_desc != '')
-    {
-        $info['description'] = $info_desc . '<br />' . $info['description'];
+            $info['description'] .= '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" style="float: right;" target="_blank" />
+                <input type="hidden" name="cmd" value="_s-xclick" />
+                <input type="hidden" name="hosted_button_id" value="VGQ4ZDT8M7WS2" />
+                <input type="image" src="https://www.paypalobjects.com/webstatic/en_US/btn/btn_donate_pp_142x27.png" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!" />
+                <img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1" />
+                </form>';
+        }
     }
 
     return $info;
@@ -93,6 +102,14 @@ function profilevisitors_install()
 {
     global $db, $lang;
     $lang->load('config_profilevisitors');
+
+    $info = profilevisitors_info();
+
+    if (version_compare(PHP_VERSION, $info['minphpversion'], '<'))
+    {
+        flash_message($lang->sprintf($db->escape_string($lang->error_wrong_php_version), $info['minphpversion']), "error");
+        admin_redirect("index.php?module=config-plugins");
+    }
 
     profilevisitors_cleanup();
 
@@ -131,6 +148,17 @@ function profilevisitors_install()
                 break;
         }
     }
+
+    foreach (PROFILEVISITORS_GROUP_OPTIONS as $option)
+    {
+        if (!$db->field_exists($option, "usergroups"))
+        {
+            $db->add_column("usergroups", $option, "tinyint(1) NOT NULL DEFAULT '0'");
+        }
+    }
+
+    global $cache;
+    $cache->update_usergroups();
 
     // Add Templates
     $templates = array(
@@ -218,17 +246,13 @@ function profilevisitors_install()
             'optionscode' => 'yesno',
             'value' => 1
         ),
-        'showgroups' => array(
-            'optionscode' => 'groupselect',
-            'value' => '2,3,4,6'
+        'canviewown' => array(
+            'optionscode' => 'yesno',
+            'value' => 1
         ),
         'limit' => array(
             'optionscode' => 'numeric \n min=0',
-            'value' => '10',
-        ),
-        'hidegroups' => array(
-            'optionscode' => 'groupselect',
-            'value' => '4'
+            'value' => 10,
         ),
         'styled_usernames' => array(
             'optionscode' => 'yesno',
@@ -242,9 +266,9 @@ function profilevisitors_install()
             'optionscode' => 'yesno',
             'value' => 1
         ),
-        'overviewpage_groups' => array(
-            'optionscode' => 'groupselect',
-            'value' => '2,3,4,6'
+        'overviewpage_perpage' => array(
+            'optionscode' => 'numeric \n min=0',
+            'value' => 20
         ),
         'overviewpage_maxavatarsize' => array(
             'optionscode' => 'text',
@@ -304,20 +328,48 @@ function profilevisitors_uninstall()
 
     rebuild_settings();
 
-    if (!isset($mybb->input['no']) && $db->table_exists('profilevisitors'))
+    if (!isset($mybb->input['no']))
     {
-        $db->drop_table('profilevisitors');
+        if ($db->table_exists('profilevisitors'))
+        {
+            $db->drop_table('profilevisitors');
+        }
+
+        foreach (PROFILEVISITORS_GROUP_OPTIONS as $option)
+        {
+            if ($db->field_exists($option, "usergroups"))
+            {
+                $db->drop_column("usergroups", $option);
+            }
+        }
+
+        global $cache;
+        $cache->update_usergroups();
     }
 }
 
 function profilevisitors_activate()
 {
+    global $db, $cache;
+
+    $db->update_query('usergroups', array("canviewprofilevisitors" => 1), 'canviewprofiles = 1');
+    $db->update_query('usergroups', array("hideonprofilevisitors" => 1), 'cancp = 1');
+
+    $cache->update_usergroups();
+
     require MYBB_ROOT . '/inc/adminfunctions_templates.php';
     find_replace_templatesets('member_profile', '#{\$modoptions}#', "{\$profilevisits}\n{\$modoptions}");
 }
 
 function profilevisitors_deactivate()
 {
+    global $db, $cache;
+
+    $db->update_query('usergroups', array("canviewprofilevisitors" => 0));
+    $db->update_query('usergroups', array("hideonprofilevisitors" => 0));
+
+    $cache->update_usergroups();
+
     require MYBB_ROOT . '/inc/adminfunctions_templates.php';
     find_replace_templatesets('member_profile', '#\{\$profilevisits\}\n#', '', 0);
 }
@@ -347,12 +399,6 @@ function profilevisitors_settings_check()
 
         if ($gid == (int)$plugin_gid)
         {
-            if (isset($mybb->input['upsetting']['profilevisitors_hidegroups']) && $mybb->input['upsetting']['profilevisitors_hidegroups'] == 'all')
-            {
-                flash_message($lang->error_setting_profilevisitors_hidegroups_all_hided, 'error');
-                admin_redirect("index.php?module=config-settings&action=change&gid=" . $gid);
-            }
-
             if (isset($mybb->input['upsetting']['profilevisitors_overviewpage_maxavatarsize']))
             {
                 if (preg_match("/\b\d+[|x]{1}\d+\b/i", $mybb->input['upsetting']['profilevisitors_overviewpage_maxavatarsize']))
@@ -371,8 +417,8 @@ function profilevisitors_settings_check()
 
 function profilevisitors_settings_peekers(&$peekers)
 {
-    $peekers[] = 'new Peeker($(".setting_profilevisitors_enable"), $("#row_setting_profilevisitors_showgroups, #row_setting_profilevisitors_limit, #row_setting_profilevisitors_hidegroups, #row_setting_profilevisitors_styled_usernames, #row_setting_profilevisitors_allvisits, #row_setting_profilevisitors_overviewpage_enable, #row_setting_profilevisitors_overviewpage_groups, #row_setting_profilevisitors_overviewpage_maxavatarsize"), 1, true)';
-    $peekers[] = 'new Peeker($(".setting_profilevisitors_overviewpage_enable"), $("#row_setting_profilevisitors_overviewpage_groups, #row_setting_profilevisitors_overviewpage_maxavatarsize"), 1, true)';
+    $peekers[] = 'new Peeker($(".setting_profilevisitors_enable"), $("#row_setting_profilevisitors_canviewown, #row_setting_profilevisitors_limit, #row_setting_profilevisitors_styled_usernames, #row_setting_profilevisitors_allvisits, #row_setting_profilevisitors_overviewpage_enable, #row_setting_profilevisitors_overviewpage_perpage, #row_setting_profilevisitors_overviewpage_maxavatarsize"), 1, true)';
+    $peekers[] = 'new Peeker($(".setting_profilevisitors_overviewpage_enable"), $("#row_setting_profilevisitors_overviewpage_perpage, #row_setting_profilevisitors_overviewpage_maxavatarsize"), 1, true)';
 }
 
 function profilevisitors_cleanup()
@@ -385,6 +431,40 @@ function profilevisitors_cleanup()
     }
 
     $db->delete_query("templates", "title IN('userprofile_profilevisitors')");
+}
+
+function profilevisitors_admin_user_groups_edit()
+{
+    global $plugins;
+    $plugins->add_hook("admin_formcontainer_end", "profilevisitors_admin_user_groups_edit_graph");
+}
+
+function profilevisitors_admin_user_groups_edit_graph()
+{
+    global $form_container, $lang, $form, $mybb, $db;
+    if ($form_container->_title == $lang->misc)
+    {
+        $lang->load("config_profilevisitors");
+
+        $pv_options = array();
+        foreach (PROFILEVISITORS_GROUP_OPTIONS as $option)
+        {
+            $lang_option = "setting_groups_{$option}";
+            $pv_options[] = $form->generate_check_box($option, 1, $db->escape_string($lang->$lang_option), array("checked" => $mybb->input[$option]));
+        }
+
+        $form_container->output_row($db->escape_string($lang->profilevisitors), "", "<div class=\"group_settings_bit\">" . implode("</div><div class=\"group_settings_bit\">", $pv_options) . "</div>");
+    }
+}
+
+function profilevisitors_admin_user_groups_edit_commit()
+{
+    global $updated_group, $mybb;
+
+    foreach (PROFILEVISITORS_GROUP_OPTIONS as $option)
+    {
+        $updated_group[$option] = $mybb->get_input($option, MyBB::INPUT_INT);
+    }
 }
 
 function profilevisitors_deleted_user($users)
@@ -414,6 +494,12 @@ function profilevisitors_member_profile()
     $mem_uid = (int)$memprofile['uid'];
     $vis_uid = (int)$mybb->user['uid'];
 
+    $viewown = false;
+    if ($mem_uid == $vis_uid)
+    {
+        $viewown = true;
+    }
+
     if ($vis_uid > 0 && $vis_uid != $mem_uid)
     {
         $where = "uid = '{$mem_uid}' AND vid = '{$vis_uid}'";
@@ -442,31 +528,42 @@ function profilevisitors_member_profile()
 
     $profilevisits = '';
 
-    if (is_member($mybb->settings['profilevisitors_showgroups']) || $mybb->settings['profilevisitors_showgroups'] == '-1')
+    if ($mybb->usergroup['canviewprofilevisitors'] == 1 || ($mybb->settings['profilevisitors_canviewown'] == 1 && $viewown !== false))
     {
-        global $lang, $templates, $theme, $profilevisitors;
+        global $lang, $cache, $templates, $theme, $profilevisitors;
         $lang->load("profilevisitors");
 
         $lang->profilevisitors_header = $db->escape_string($lang->profilevisitors_header);
         $profilevisitors_header_info = $profilevisitors_header_all = $profilevisitors_footer = '';
         $profilevisitors = $db->escape_string($lang->profilevisitors_novisitors);
 
-        if ($mybb->settings['profilevisitors_hidegroups'] != "-1")
+        $where = "WHERE pv.uid = '{$mem_uid}'";
+
+        $groups = $cache->read("usergroups");
+        $hiddengroups = array();
+        if (!empty($groups))
         {
-            $where = "WHERE pv.uid = '{$mem_uid}'";
-
-            if (!empty($mybb->settings['profilevisitors_hidegroups']))
+            foreach ($groups as $group)
             {
-                $where .= ' AND u.usergroup NOT IN (' . $mybb->settings['profilevisitors_hidegroups'] . ')';
+                if ($group['hideonprofilevisitors'] == 1)
+                {
+                    $hiddengroups[] = (int)$group['gid'];
+                }
             }
+        }
 
-            $limit = "";
-            if ($mybb->settings['profilevisitors_limit'] > 0)
-            {
-                $limit = "LIMIT " . (int)$mybb->settings['profilevisitors_limit'];
-            }
+        if (!empty($hiddengroups))
+        {
+            $where .= ' AND u.usergroup NOT IN (' . implode(',', $hiddengroups) . ')';
+        }
 
-            $query = $db->query("
+        $limit = "";
+        if ($mybb->settings['profilevisitors_limit'] > 0)
+        {
+            $limit = "LIMIT " . (int)$mybb->settings['profilevisitors_limit'];
+        }
+
+        $query = $db->query("
                 SELECT pv.vid, pv.dateline, u.username, u.usergroup, u.displaygroup
                 FROM " . TABLE_PREFIX . "profilevisitors pv
                 LEFT JOIN " . TABLE_PREFIX . "users u ON (u.uid=pv.vid)
@@ -475,49 +572,48 @@ function profilevisitors_member_profile()
                 {$limit}
             ");
 
-            if ($db->num_rows($query) > 0)
+        if ($db->num_rows($query) > 0)
+        {
+            $profilevisitors = $comma = '';
+            while ($visitor = $db->fetch_array($query))
             {
-                $profilevisitors = $comma = '';
-                while ($visitor = $db->fetch_array($query))
+                $visitdate = my_date($mybb->settings['dateformat'], $visitor['dateline']);
+                $visittime = my_date($mybb->settings['timeformat'], $visitor['dateline']);
+
+                if ($mybb->settings['profilevisitors_styled_usernames'] == 1)
                 {
-                    $visitdate = my_date($mybb->settings['dateformat'], $visitor['dateline']);
-                    $visittime = my_date($mybb->settings['timeformat'], $visitor['dateline']);
-
-                    if ($mybb->settings['profilevisitors_styled_usernames'] == 1)
-                    {
-                        $visitor['username'] = format_name(htmlspecialchars_uni($visitor['username']), $visitor['usergroup'], $visitor['displaygroup']);
-                    }
-                    else
-                    {
-                        $visitor['username'] = htmlspecialchars_uni($visitor['username']);
-                    }
-
-                    $visitor['profilelink'] = build_profile_link($visitor['username'], $visitor['vid']);
-
-                    eval('$profilevisitors .= "' . $templates->get('member_profile_visitors_visitor', 1, 0) . '";');
-                    $comma = ", ";
+                    $visitor['username'] = format_name(htmlspecialchars_uni($visitor['username']), $visitor['usergroup'], $visitor['displaygroup']);
+                }
+                else
+                {
+                    $visitor['username'] = htmlspecialchars_uni($visitor['username']);
                 }
 
-                if ($mybb->settings['profilevisitors_limit'] > 0)
-                {
-                    $lang->profilevisitors_header_info = $lang->sprintf($db->escape_string($lang->profilevisitors_header_info), (int)$mybb->settings['profilevisitors_limit']);
-                    eval('$profilevisitors_header_info = "' . $templates->get('member_profile_visitors_header_info') . '";');
-                }
+                $visitor['profilelink'] = build_profile_link($visitor['username'], $visitor['vid']);
 
-                if ($mybb->settings['profilevisitors_allvisits'] == 1)
-                {
-                    $query = $db->simple_select("profilevisitors", "COUNT(*) AS allvisits", "uid = '{$mem_uid}'");
-                    $allvisits = (int)$db->fetch_field($query, 'allvisits');
+                eval('$profilevisitors .= "' . $templates->get('member_profile_visitors_visitor', 1, 0) . '";');
+                $comma = ", ";
+            }
 
-                    $lang->profilevisitors_header_all = $lang->sprintf($db->escape_string($lang->profilevisitors_header_all), $allvisits);
-                    eval('$profilevisitors_header_all = "' . $templates->get('member_profile_visitors_header_all') . '";');
-                }
+            if ($mybb->settings['profilevisitors_limit'] > 0)
+            {
+                $lang->profilevisitors_header_info = $lang->sprintf($db->escape_string($lang->profilevisitors_header_info), (int)$mybb->settings['profilevisitors_limit']);
+                eval('$profilevisitors_header_info = "' . $templates->get('member_profile_visitors_header_info') . '";');
+            }
 
-                if ($mybb->settings['profilevisitors_overviewpage_enable'] == 1 && is_member($mybb->settings['profilevisitors_overviewpage_groups']))
-                {
-                    $lang->profilevisitors_footer = $lang->sprintf($db->escape_string($lang->profilevisitors_footer), htmlspecialchars_uni($memprofile['username']));
-                    eval('$profilevisitors_footer = "' . $templates->get('member_profile_visitors_footer') . '";');
-                }
+            if ($mybb->settings['profilevisitors_allvisits'] == 1)
+            {
+                $query = $db->simple_select("profilevisitors", "COUNT(*) AS allvisits", "uid = '{$mem_uid}'");
+                $allvisits = (int)$db->fetch_field($query, 'allvisits');
+
+                $lang->profilevisitors_header_all = $lang->sprintf($db->escape_string($lang->profilevisitors_header_all), $allvisits);
+                eval('$profilevisitors_header_all = "' . $templates->get('member_profile_visitors_header_all') . '";');
+            }
+
+            if ($mybb->settings['profilevisitors_overviewpage_enable'] == 1)
+            {
+                $lang->profilevisitors_footer = $lang->sprintf($db->escape_string($lang->profilevisitors_footer), htmlspecialchars_uni($memprofile['username']));
+                eval('$profilevisitors_footer = "' . $templates->get('member_profile_visitors_footer') . '";');
             }
         }
 
@@ -549,11 +645,6 @@ function profilevisitors_misc()
         error($lang->error_profilevisitors_overviewpage_disabled);
     }
 
-    if ($mybb->usergroup['canviewprofiles'] != 1 || !is_member($mybb->settings['profilevisitors_overviewpage_groups']))
-    {
-        error_no_permission();
-    }
-
     $uid = $mybb->get_input('uid', MyBB::INPUT_INT);
     if (empty($uid))
     {
@@ -566,15 +657,39 @@ function profilevisitors_misc()
         error($lang->error_profilevisitors_not_exists);
     }
 
-    global $db, $headerinclude, $header, $theme, $templates, $footer;
+    $viewown = false;
+    if ($mybb->settings['profilevisitors_canviewown'] == 1 && (int)$mybb->user['uid'] == $uid)
+    {
+        $viewown = true;
+    }
+
+    if ($mybb->usergroup['canviewprofiles'] != 1 || ($mybb->usergroup['canviewprofilevisitors'] != 1 && $viewown === false))
+    {
+        error_no_permission();
+    }
+
+    global $db, $cache, $headerinclude, $header, $theme, $templates, $footer;
 
     $profile_visitors = $profile_visitors_row = '';
 
     $where = "WHERE pv.uid = '{$uid}' AND u.uid != 0";
 
-    if (!empty($mybb->settings['profilevisitors_hidegroups']))
+    $groups = $cache->read("usergroups");
+    $hiddengroups = array();
+    if (!empty($groups))
     {
-        $where .= ' AND u.usergroup NOT IN (' . $mybb->settings['profilevisitors_hidegroups'] . ')';
+        foreach ($groups as $group)
+        {
+            if ($group['hideonprofilevisitors'] == 1)
+            {
+                $hiddengroups[] = (int)$group['gid'];
+            }
+        }
+    }
+
+    if (!empty($hiddengroups))
+    {
+        $where .= ' AND u.usergroup NOT IN (' . implode(',', $hiddengroups) . ')';
     }
 
     $query = $db->query("
@@ -630,13 +745,13 @@ function profilevisitors_misc()
 
 
 
-        if (!$mybb->settings['membersperpage'])
+        if ($mybb->settings['profilevisitors_overviewpage_perpage'] == 0)
         {
-            $per_page = 10;
+            $per_page = 20;
         }
         else
         {
-            $per_page = $mybb->settings['membersperpage'];
+            $per_page = $mybb->settings['profilevisitors_overviewpage_perpage'];
         }
 
         $page = $mybb->get_input('page', MyBB::INPUT_INT);
