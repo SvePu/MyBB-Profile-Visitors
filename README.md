@@ -8,7 +8,7 @@ Installation:
 * Unzip package
 * Copy content from "UPLOAD" folder to the forum root on server
 * Install & Activate the plugin in ACP
-* Check the "Profile Visitors Settings" in configuration
+* Check the "Profile Visitors Settings" in configuration and user group settings
 
 Simple Update:
 * Download & unzip new package
@@ -19,7 +19,7 @@ Full Update:
 * Uninstall plugin in ACP
 * Copy content from "Upload" folder to the forum root on server - overwrite existing plugin files
 * Install & activate the plugn in ACP
-* Check the plugin settings in configuration
+* Check the plugin settings in configuration and user group settings
 
 --------------------------------
 
