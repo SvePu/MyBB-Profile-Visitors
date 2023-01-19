@@ -3,7 +3,7 @@
 /**
  *  Main plugin file for Profile Visitors Plugin for MyBB 1.8
  *  Copyright © 2014 - 2023 SvePu
- *  Last change: 2022-01-05 - v 2.1
+ *  Last change: 2022-01-19 - v 2.2
  *  Licensed under the GNU GPL, version 3
  */
 
@@ -67,7 +67,7 @@ function profilevisitors_info()
         'website'       => 'https://github.com/SvePu/MyBB-Profile-Visitors',
         'author'        => 'SvePu',
         'authorsite'    => 'https://github.com/SvePu',
-        'version'       => '2.1',
+        'version'       => '2.2',
         'compatibility' => '18*',
         'codename'      => 'profilevisitors',
         'minphpversion' => '7.0'
